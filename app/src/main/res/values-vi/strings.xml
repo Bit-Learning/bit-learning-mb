@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Bit Learning</string>
+
+    <string name="vietnamese">Tiếng Việt</string>
+    <string name="english">English</string>
+
+    <string name="change_language">Thay đổi ngôn ngữ</string>
+    <string name="select_language">Chọn ngôn ngữ</string>
+    <string name="language_note_title">Lựa chọn ngôn ngữ</string>
+    <string name="language_note_description">Chọn ngôn ngữ bạn muốn sử dụng để có trải nghiệm cá nhân hóa.</string>
+    <string name="updating_price">Đang cập nhật giá…</string>
+
+
+</resources>
