@@ -1,0 +1,351 @@
+/**
+ * Copyright (c) 2026 Bit Learning. All rights reserved.
+ * This software is the confidential and proprietary information of hcmurs.
+ * You shall not disclose such confidential information and shall use it only in
+ * accordance with the terms of the license agreement you entered into with hcmurs.
+ */
+package com.app.bitlearning.features.coursedetail.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.app.bitlearning.core.common.components.*
+import com.app.bitlearning.core.common.theme.*
+import com.app.bitlearning.domain.model.Lesson
+
+@Composable
+fun CourseDetailScreen(
+    courseId: String,
+    onNavigateBack: () -> Unit,
+    onStartLesson: (String) -> Unit,
+    viewModel: CourseDetailViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("Bài học", "Giới thiệu", "Tài liệu")
+
+    Scaffold(
+        containerColor = Background,
+        topBar = {
+            CourseDetailTopBar(
+                title = uiState.course?.title ?: "",
+                onBack = onNavigateBack,
+            )
+        },
+        bottomBar = {
+            if (!uiState.isLoading && uiState.course != null) {
+                Box(modifier = Modifier.padding(16.dp)) {
+                    BLPrimaryButton(
+                        text = if ((uiState.course?.progress ?: 0f) > 0f) {
+                            "Tiếp tục học"
+                        } else {
+                            "Bắt đầu học"
+                        },
+                        onClick = { onStartLesson(courseId) },
+                        leadingIcon = Icons.Filled.PlayArrow,
+                    )
+                }
+            }
+        },
+    ) { padding ->
+        if (uiState.isLoading) {
+            BLLoadingIndicator()
+        } else {
+            val course = uiState.course ?: return@Scaffold
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+            ) {
+                // Course Thumbnail
+                item {
+                    AsyncImage(
+                        model = course.thumbnailUrl,
+                        contentDescription = course.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .background(SurfaceVariant),
+                    )
+                }
+
+                // Course Info
+                item {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        BLCategoryChip(label = course.category.displayName)
+                        Text(
+                            text = course.title,
+                            style = MaterialTheme.typography.headlineLarge,
+                        )
+                        Text(
+                            text = "Giảng viên: ${course.instructor}",
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            BLRatingRow(rating = course.rating, reviewCount = course.reviewCount)
+                            CourseInfoChip(
+                                icon = Icons.Filled.PlayCircle,
+                                text = "${course.lessonCount} bài",
+                            )
+                            CourseInfoChip(
+                                icon = Icons.Filled.AccessTime,
+                                text = course.duration,
+                            )
+                        }
+                        if (course.progress > 0f) {
+                            BLProgressBar(
+                                progress = course.progress,
+                                showLabel = true,
+                                label = "TIẾN ĐỘ KHÓA HỌC",
+                            )
+                        }
+                    }
+                    BLDivider()
+                }
+
+                // Tabs
+                item {
+                    TabRow(
+                        selectedTabIndex = selectedTab,
+                        containerColor = Surface,
+                        contentColor = Primary,
+                        indicator = { tabPositions ->
+                            TabRowDefaults.SecondaryIndicator(
+                                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                color = Primary,
+                            )
+                        },
+                    ) {
+                        tabs.forEachIndexed { index, title ->
+                            Tab(
+                                selected = selectedTab == index,
+                                onClick = { selectedTab = index },
+                                text = {
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.titleSmall.copy(
+                                            fontWeight = if (selectedTab == index) {
+                                                FontWeight.SemiBold
+                                            } else {
+                                                FontWeight.Normal
+                                            },
+                                        ),
+                                    )
+                                },
+                            )
+                        }
+                    }
+                }
+
+                // Tab content - Lessons
+                if (selectedTab == 0) {
+                    items(uiState.lessons) { lesson ->
+                        LessonItem(
+                            lesson = lesson,
+                            onClick = {
+                                if (!lesson.isLocked) onStartLesson(courseId)
+                            },
+                        )
+                        BLDivider(Modifier.padding(horizontal = 16.dp))
+                    }
+                }
+
+                // Tab content - Description
+                if (selectedTab == 1) {
+                    item {
+                        Text(
+                            text = course.description,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(20.dp),
+                        )
+                    }
+                }
+
+                item { Spacer(Modifier.height(16.dp)) }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────
+//  Lesson List Item
+// ─────────────────────────────────────────────
+@Composable
+private fun LessonItem(
+    lesson: Lesson,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !lesson.isLocked) { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        // Play/Complete button
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(
+                    when {
+                        lesson.isCompleted -> PrimaryContainer
+                        lesson.isCurrentlyPlaying -> Primary
+                        lesson.isLocked -> SurfaceVariant
+                        else -> SurfaceVariant
+                    },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            when {
+                lesson.isCompleted -> Icon(
+                    Icons.Filled.CheckCircle,
+                    null,
+                    tint = Primary,
+                    modifier = Modifier.size(20.dp),
+                )
+                lesson.isLocked -> Icon(
+                    Icons.Filled.Lock,
+                    null,
+                    tint = OnSurfaceMuted,
+                    modifier = Modifier.size(18.dp),
+                )
+                else -> Icon(
+                    Icons.Filled.PlayArrow,
+                    null,
+                    tint = if (lesson.isCurrentlyPlaying) OnPrimary else OnSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+
+        // Title and duration
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "${lesson.order.toString().padStart(2, '0')}. ${lesson.title}",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    color = if (lesson.isLocked) OnSurfaceMuted else OnSurface,
+                    textDecoration = if (lesson.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                ),
+            )
+            Spacer(Modifier.height(2.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = formatDuration(lesson.durationSeconds),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = if (lesson.isCurrentlyPlaying) Primary else OnSurfaceMuted,
+                        fontWeight = if (lesson.isCurrentlyPlaying) FontWeight.SemiBold else FontWeight.Normal,
+                    ),
+                )
+                if (lesson.isCurrentlyPlaying) {
+                    Text(
+                        text = "• Đang phát",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Primary,
+                            fontWeight = FontWeight.SemiBold,
+                        ),
+                    )
+                }
+            }
+        }
+
+        // Dot indicator for currently playing
+        if (lesson.isCurrentlyPlaying) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(Primary),
+            )
+        }
+    }
+}
+
+// ─────────────────────────────────────────────
+//  Top Bar
+// ─────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CourseDetailTopBar(
+    title: String,
+    onBack: () -> Unit,
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Quay lại")
+            }
+        },
+        actions = {
+            IconButton(onClick = { /* TODO: More options */ }) {
+                Icon(Icons.Filled.MoreVert, null)
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Background),
+    )
+}
+
+// ─────────────────────────────────────────────
+//  Course Info Chip
+// ─────────────────────────────────────────────
+@Composable
+private fun CourseInfoChip(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        Icon(icon, null, tint = OnSurfaceMuted, modifier = Modifier.size(14.dp))
+        Text(text = text, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+private fun formatDuration(seconds: Int): String {
+    val m = seconds / 60
+    val s = seconds % 60
+    return "${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}"
+}
+
+// Extension needed for Tab indicator
+private fun Modifier.tabIndicatorOffset(tabPosition: androidx.compose.material3.TabPosition): Modifier = this.then(
+    Modifier.fillMaxWidth(1f / 3)
+        .wrapContentSize(Alignment.BottomStart)
+        .offset(x = tabPosition.left),
+)

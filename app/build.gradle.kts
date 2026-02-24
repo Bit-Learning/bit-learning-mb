@@ -136,6 +136,11 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.barcode.scanning)
 
+    // Media3 / ExoPlayer
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
+    implementation(libs.media3.session)
+
     // splashscreen
     implementation(libs.androidx.core.splashscreen)
 

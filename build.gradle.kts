@@ -23,6 +23,9 @@ subprojects {
             "ktlint_standard_no-wildcard-imports" to "disabled", // cho phép wildcard imports
             "ktlint_function_naming_ignore_when_annotated_with" to "Composable",
             "ktlint_standard_property-naming" to "disable",
+            "ktlint_standard_no-empty-file" to
+              "disabled", // cho phép file rỗng (ví dụ: để chứa các extension functions mà chưa có
+            // nội dung nào
           )
         )
       licenseHeaderFile(rootProject.file("spotless/license-header.kt"))
