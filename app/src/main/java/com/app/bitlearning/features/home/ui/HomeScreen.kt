@@ -35,6 +35,8 @@ import com.app.bitlearning.domain.model.Course
 fun HomeScreen(
     onNavigateToCourse: (String) -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToCourses: () -> Unit,
+    onNavigateToSearch: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -47,7 +49,12 @@ fun HomeScreen(
                 currentRoute = currentTab,
                 onNavigate = { route ->
                     currentTab = route
-                    if (route == "profile") onNavigateToProfile()
+                    when (route) {
+                        "home" -> Unit
+                        "profile" -> onNavigateToProfile()
+                        "courses" -> onNavigateToCourses()
+                        "search" -> onNavigateToSearch()
+                    }
                 },
             )
         },
@@ -72,7 +79,10 @@ fun HomeScreen(
 
                 // Search Bar
                 item {
-                    HomeSearchBar(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+                    HomeSearchBar(
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                        onClick = onNavigateToSearch,
+                    )
                 }
 
                 // Continue Learning Section
@@ -180,14 +190,17 @@ private fun HomeTopBar(
 //  Search Bar
 // ─────────────────────────────────────────────
 @Composable
-private fun HomeSearchBar(modifier: Modifier = Modifier) {
+private fun HomeSearchBar(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(50.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(SurfaceVariant)
-            .clickable { /* TODO: Navigate to Search */ }
+            .clickable { onClick() }
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart,
     ) {

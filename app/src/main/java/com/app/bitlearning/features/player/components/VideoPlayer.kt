@@ -8,6 +8,7 @@ package com.app.bitlearning.features.player.components
 
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.app.bitlearning.core.common.theme.OnBackground
@@ -24,6 +26,7 @@ import com.app.bitlearning.core.common.theme.OnBackground
  * VideoPlayer composable wrapping ExoPlayer (Media3).
  * Accepts a video URL and handles player lifecycle automatically.
  */
+@OptIn(UnstableApi::class)
 @Composable
 fun BLVideoPlayer(
     videoUrl: String?,

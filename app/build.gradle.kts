@@ -100,6 +100,7 @@ dependencies {
 
     implementation(libs.logging.interceptor)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.compose.foundation)
 
     ksp(libs.hilt.android.compiler)
     ksp(libs.androidx.room.compiler)

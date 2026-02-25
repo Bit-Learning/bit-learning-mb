@@ -40,6 +40,7 @@ workRuntimeKtx = "2.10.2"
 material3 = "1.3.2"
 appwrite = "8.1.0"
 media3 = "1.3.1"
+foundation = "1.10.3"
 
 [libraries]
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistPager" }
@@ -101,6 +102,7 @@ composeIcons-fontAwesome = { module = "br.com.devsrsouza.compose.icons:font-awes
 stripe-android = { module = "com.stripe:stripe-android", version.ref = "stripeAndroid" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 stripe-android-v2250 = { module = "com.stripe:stripe-android", version.ref = "stripeAndroidVersion" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

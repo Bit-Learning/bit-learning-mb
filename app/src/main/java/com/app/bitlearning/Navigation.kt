@@ -12,9 +12,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.app.bitlearning.features.auth.ui.AuthScreen
 import com.app.bitlearning.features.coursedetail.ui.CourseDetailScreen
+import com.app.bitlearning.features.courses.ui.CoursesScreen
 import com.app.bitlearning.features.home.ui.HomeScreen
 import com.app.bitlearning.features.player.ui.PlayerScreen
 import com.app.bitlearning.features.profile.ui.ProfileScreen
+import com.app.bitlearning.features.search.ui.SearchScreen
 import com.app.bitlearning.features.splash.ui.SplashScreen
 
 object Routes {
@@ -66,6 +68,46 @@ fun BitLearningNavGraph(navController: NavHostController) {
             HomeScreen(
                 onNavigateToCourse = { courseId ->
                     navController.navigate(Routes.courseDetail(courseId))
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Routes.PROFILE)
+                },
+                onNavigateToCourses = {
+                    navController.navigate(Routes.COURSES)
+                },
+                onNavigateToSearch = {
+                    navController.navigate(Routes.SEARCH)
+                },
+            )
+        }
+
+        composable(Routes.COURSES) {
+            CoursesScreen(
+                onNavigateToCourse = { courseId ->
+                    navController.navigate(Routes.courseDetail(courseId))
+                },
+                onNavigateToHome = {
+                    navController.navigate(Routes.HOME)
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Routes.PROFILE)
+                },
+                onNavigateToSearch = {
+                    navController.navigate(Routes.SEARCH)
+                },
+            )
+        }
+
+        composable(Routes.SEARCH) {
+            SearchScreen(
+                onNavigateToCourse = { courseId ->
+                    navController.navigate(Routes.courseDetail(courseId))
+                },
+                onNavigateToHome = {
+                    navController.navigate(Routes.HOME)
+                },
+                onNavigateToCourses = {
+                    navController.navigate(Routes.COURSES)
                 },
                 onNavigateToProfile = {
                     navController.navigate(Routes.PROFILE)
