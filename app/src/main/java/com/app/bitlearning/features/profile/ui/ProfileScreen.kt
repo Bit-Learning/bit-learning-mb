@@ -32,6 +32,7 @@ fun ProfileScreen(
     onLogout: () -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToEdit: () -> Unit = {},
+    onNavigateToCertificates: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -79,7 +80,7 @@ fun ProfileScreen(
                             BLMenuItemRow(
                                 title = "Chứng chỉ của tôi",
                                 icon = Icons.Filled.EmojiEvents,
-                                onClick = { /* TODO */ },
+                                onClick = onNavigateToCertificates,
                             )
                             BLDivider(Modifier.padding(horizontal = 16.dp))
                             BLMenuItemRow(
