@@ -336,7 +336,3 @@ private fun NotificationBottomBar(
         )
     }
 }
-
-
-
-

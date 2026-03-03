@@ -13,14 +13,18 @@ import androidx.navigation.compose.composable
 import com.app.bitlearning.features.auth.ui.AuthScreen
 import com.app.bitlearning.features.coursedetail.ui.CourseDetailScreen
 import com.app.bitlearning.features.courses.ui.CoursesScreen
+import com.app.bitlearning.features.history.ui.LearningHistoryScreen
 import com.app.bitlearning.features.home.ui.HomeScreen
 import com.app.bitlearning.features.notification.ui.NotificationScreen
+import com.app.bitlearning.features.notificationsetting.ui.NotificationSettingScreen
+import com.app.bitlearning.features.payment.ui.PaymentSettingScreen
 import com.app.bitlearning.features.player.ui.PlayerScreen
 import com.app.bitlearning.features.profile.ui.EditProfileScreen
 import com.app.bitlearning.features.profile.ui.MyCertificatesScreen
 import com.app.bitlearning.features.profile.ui.ProfileScreen
 import com.app.bitlearning.features.search.ui.SearchScreen
 import com.app.bitlearning.features.splash.ui.SplashScreen
+import com.app.bitlearning.features.support.ui.SupportScreen
 
 object Routes {
     const val SPLASH = "splash"
@@ -32,6 +36,10 @@ object Routes {
     const val EDIT_PROFILE = "edit_profile"
     const val MY_CERTIFICATES = "my_certificates"
     const val NOTIFICATION = "notification"
+    const val LEARNING_HISTORY = "learning_history"
+    const val SUPPORT = "support"
+    const val NOTIFICATION_SETTING = "notification_setting"
+    const val PAYMENT_SETTING = "payment_setting"
     const val COURSE_DETAIL = "course_detail/{courseId}"
     const val PLAYER = "player/{courseId}"
 
@@ -137,6 +145,10 @@ fun BitLearningNavGraph(navController: NavHostController) {
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToEdit = { navController.navigate(Routes.EDIT_PROFILE) },
                 onNavigateToCertificates = { navController.navigate(Routes.MY_CERTIFICATES) },
+                onNavigateToHistory = { navController.navigate(Routes.LEARNING_HISTORY) },
+                onNavigateToSupport = { navController.navigate(Routes.SUPPORT) },
+                onNavigateToNotificationSetting = { navController.navigate(Routes.NOTIFICATION_SETTING) },
+                onNavigateToPaymentSetting = { navController.navigate(Routes.PAYMENT_SETTING) },
             )
         }
 
@@ -169,6 +181,48 @@ fun BitLearningNavGraph(navController: NavHostController) {
                 },
                 onNavigateToCourses = { navController.navigate(Routes.COURSES) },
                 onNavigateToProfile = { navController.navigate(Routes.PROFILE) },
+            )
+        }
+
+        composable(Routes.LEARNING_HISTORY) {
+            LearningHistoryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToCourse = { courseId ->
+                    navController.navigate(Routes.courseDetail(courseId))
+                },
+                onNavigateToCertificates = { navController.navigate(Routes.MY_CERTIFICATES) },
+                onNavigateToHome = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME) { inclusive = false }
+                    }
+                },
+                onNavigateToCourses = { navController.navigate(Routes.COURSES) },
+                onNavigateToProfile = { navController.navigate(Routes.PROFILE) },
+            )
+        }
+
+        composable(Routes.SUPPORT) {
+            SupportScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToHome = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME) { inclusive = false }
+                    }
+                },
+                onNavigateToCourses = { navController.navigate(Routes.COURSES) },
+                onNavigateToProfile = { navController.navigate(Routes.PROFILE) },
+            )
+        }
+
+        composable(Routes.NOTIFICATION_SETTING) {
+            NotificationSettingScreen(
+                onNavigateBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.PAYMENT_SETTING) {
+            PaymentSettingScreen(
+                onNavigateBack = { navController.popBackStack() },
             )
         }
 

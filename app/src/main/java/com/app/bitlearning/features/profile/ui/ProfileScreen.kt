@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,6 +34,10 @@ fun ProfileScreen(
     onNavigateBack: () -> Unit,
     onNavigateToEdit: () -> Unit = {},
     onNavigateToCertificates: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
+    onNavigateToSupport: () -> Unit = {},
+    onNavigateToNotificationSetting: () -> Unit = {},
+    onNavigateToPaymentSetting: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -86,7 +91,7 @@ fun ProfileScreen(
                             BLMenuItemRow(
                                 title = "Lịch sử học tập",
                                 icon = Icons.Filled.History,
-                                onClick = { /* TODO */ },
+                                onClick = onNavigateToHistory,
                             )
                         }
                     }
@@ -109,19 +114,19 @@ fun ProfileScreen(
                             BLMenuItemRow(
                                 title = "Phương thức thanh toán",
                                 icon = Icons.Filled.CreditCard,
-                                onClick = { /* TODO */ },
+                                onClick = onNavigateToPaymentSetting,
                             )
                             BLDivider(Modifier.padding(horizontal = 16.dp))
                             BLMenuItemRow(
                                 title = "Cài đặt thông báo",
                                 icon = Icons.Filled.Notifications,
-                                onClick = { /* TODO */ },
+                                onClick = onNavigateToNotificationSetting,
                             )
                             BLDivider(Modifier.padding(horizontal = 16.dp))
                             BLMenuItemRow(
                                 title = "Trợ giúp & Hỗ trợ",
-                                icon = Icons.Filled.HelpOutline,
-                                onClick = { /* TODO */ },
+                                icon = Icons.AutoMirrored.Filled.HelpOutline,
+                                onClick = onNavigateToSupport,
                             )
                         }
                     }

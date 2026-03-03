@@ -505,6 +505,4 @@ private fun categoryIcon(icon: String) = when (icon) {
     else -> Icons.Filled.Category
 }
 
-private fun categoryColor(category: com.app.bitlearning.domain.model.CourseCategory): Color =
-    Color(android.graphics.Color.parseColor(category.colorHex))
-
+private fun categoryColor(category: com.app.bitlearning.domain.model.CourseCategory): Color = Color(android.graphics.Color.parseColor(category.colorHex))

@@ -116,15 +116,20 @@ fun MyCertificatesScreen(
                         .padding(top = 20.dp, bottom = 16.dp),
                 ) {
                     Text(
-                        text = if (uiState.selectedTab == CertificateTab.RECEIVED)
-                            "Chứng chỉ đã đạt được" else "Chứng chỉ đang chờ",
+                        text = if (uiState.selectedTab == CertificateTab.RECEIVED) {
+                            "Chứng chỉ đã đạt được"
+                        } else {
+                            "Chứng chỉ đang chờ"
+                        },
                         style = MaterialTheme.typography.headlineLarge,
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = if (uiState.selectedTab == CertificateTab.RECEIVED)
+                        text = if (uiState.selectedTab == CertificateTab.RECEIVED) {
                             "Bạn đã hoàn thành ${uiState.receivedCertificates.size} khóa học xuất sắc"
-                        else "Chưa có chứng chỉ đang chờ xử lý",
+                        } else {
+                            "Chưa có chứng chỉ đang chờ xử lý"
+                        },
                         style = MaterialTheme.typography.bodyMedium.copy(color = OnSurfaceMuted),
                     )
                 }
@@ -408,8 +413,11 @@ private fun EmptyState(tab: CertificateTab) {
             modifier = Modifier.size(64.dp),
         )
         Text(
-            text = if (tab == CertificateTab.RECEIVED) "Bạn chưa có chứng chỉ nào"
-            else "Không có chứng chỉ đang chờ",
+            text = if (tab == CertificateTab.RECEIVED) {
+                "Bạn chưa có chứng chỉ nào"
+            } else {
+                "Không có chứng chỉ đang chờ"
+            },
             style = MaterialTheme.typography.headlineSmall.copy(color = OnSurfaceMuted),
         )
         Text(
@@ -471,6 +479,3 @@ private fun navBarColors() = NavigationBarItemDefaults.colors(
     unselectedTextColor = OnSurfaceMuted,
     indicatorColor = PrimaryContainer,
 )
-
-
-

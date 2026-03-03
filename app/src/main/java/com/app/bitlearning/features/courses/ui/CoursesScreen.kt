@@ -205,8 +205,12 @@ private fun FilterChip(
             .background(if (selected) Primary else CardSurface)
             .clickable { onClick() }
             .then(
-                if (!selected) Modifier
-                    .clip(RoundedCornerShape(50.dp)) else Modifier,
+                if (!selected) {
+                    Modifier
+                        .clip(RoundedCornerShape(50.dp))
+                } else {
+                    Modifier
+                },
             )
             .padding(horizontal = 18.dp, vertical = 8.dp),
     ) {

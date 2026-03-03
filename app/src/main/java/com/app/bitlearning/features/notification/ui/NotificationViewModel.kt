@@ -65,14 +65,11 @@ class NotificationViewModel @Inject constructor() : ViewModel() {
     private val _uiState = MutableStateFlow(NotificationUiState(notifications = mockNotifications()))
     val uiState: StateFlow<NotificationUiState> = _uiState
 
-    fun selectCategory(category: NotificationCategory) =
-        _uiState.update { it.copy(selectedCategory = category) }
+    fun selectCategory(category: NotificationCategory) = _uiState.update { it.copy(selectedCategory = category) }
 
-    fun markAllRead() =
-        _uiState.update { s -> s.copy(notifications = s.notifications.map { it.copy(isUnread = false) }) }
+    fun markAllRead() = _uiState.update { s -> s.copy(notifications = s.notifications.map { it.copy(isUnread = false) }) }
 
-    fun markRead(id: String) =
-        _uiState.update { s -> s.copy(notifications = s.notifications.map { if (it.id == id) it.copy(isUnread = false) else it }) }
+    fun markRead(id: String) = _uiState.update { s -> s.copy(notifications = s.notifications.map { if (it.id == id) it.copy(isUnread = false) else it }) }
 }
 
 // ─────────────────────────────────────────────
@@ -122,4 +119,3 @@ private fun mockNotifications() = listOf(
         groupLabel = "Hôm qua",
     ),
 )
-

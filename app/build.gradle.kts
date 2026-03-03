@@ -18,22 +18,20 @@ if (keystorePropertiesFile.exists()) {
 }
 
 // get version code from the specified property argument `-PversionCode` during the build call
-fun getMyVersionCode(): Int {
-    return if (project.hasProperty("versionCode")) {
+fun getMyVersionCode(): Int =
+    if (project.hasProperty("versionCode")) {
         project.property("versionCode").toString().toInt()
     } else {
         1
     }
-}
 
 // get version name from the specified property argument `-PversionName` during the build call
-fun getMyVersionName(): String {
-    return if (project.hasProperty("versionName")) {
+fun getMyVersionName(): String =
+    if (project.hasProperty("versionName")) {
         project.property("versionName").toString()
     } else {
         "1.0"
     }
-}
 
 android {
     val appId = "com.app.bitlearning"

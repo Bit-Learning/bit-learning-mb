@@ -29,8 +29,11 @@ data class MyCertificatesUiState(
     val displayedCertificates: List<Certificate>
         get() {
             val base = if (selectedTab == CertificateTab.RECEIVED) receivedCertificates else pendingCertificates
-            return if (searchQuery.isBlank()) base
-            else base.filter { it.courseTitle.contains(searchQuery, ignoreCase = true) }
+            return if (searchQuery.isBlank()) {
+                base
+            } else {
+                base.filter { it.courseTitle.contains(searchQuery, ignoreCase = true) }
+            }
         }
 }
 
@@ -63,4 +66,3 @@ class MyCertificatesViewModel @Inject constructor(
 
     fun onSearchQueryChange(query: String) = _uiState.update { it.copy(searchQuery = query) }
 }
-

@@ -50,12 +50,12 @@ class SearchViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState
 
-    private val _queryFlow = MutableStateFlow("")
+    private val queryFlow = MutableStateFlow("")
 
     init {
         loadTrending()
         viewModelScope.launch {
-            _queryFlow
+            queryFlow
                 .debounce(300)
                 .distinctUntilChanged()
                 .collect { query -> executeSearch(query) }
@@ -73,7 +73,7 @@ class SearchViewModel @Inject constructor(
 
     fun onQueryChange(query: String) {
         _uiState.update { it.copy(query = query) }
-        _queryFlow.value = query
+        queryFlow.value = query
     }
 
     private fun executeSearch(query: String) {
@@ -86,9 +86,11 @@ class SearchViewModel @Inject constructor(
             courseRepository.searchCourses(query)
                 .onSuccess { data ->
                     val trimmed = query.trim()
-                    val updatedRecent = (_uiState.value.recentSearches
-                        .filter { it != trimmed }
-                        .let { listOf(trimmed) + it })
+                    val updatedRecent = (
+                        _uiState.value.recentSearches
+                            .filter { it != trimmed }
+                            .let { listOf(trimmed) + it }
+                        )
                         .take(5)
                     _uiState.update {
                         it.copy(results = data, isLoading = false, error = null, recentSearches = updatedRecent)
