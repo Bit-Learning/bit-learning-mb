@@ -1,3 +1,4 @@
+import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
@@ -7,6 +8,10 @@ plugins {
     id("com.google.devtools.ksp")
     // id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
+}
+
+val keystoreProperties = Properties().apply {
+    load(FileInputStream(rootProject.file("keystore.properties")))
 }
 
 android {
@@ -31,23 +36,22 @@ android {
         }
 
         manifestPlaceholders["appAuthRedirectScheme"] = appId
+    }
 
-        // Read from local.properties
-        val properties = Properties()
-        if (rootProject.file("local.properties").exists()) {
-            properties.load(project.rootProject.file("local.properties").inputStream())
-        } else {
-            throw RuntimeException("local.properties file not found")
+    signingConfigs {
+        create("release") {
+            if (System.getenv("CI") == "true") {
+                storeFile = file(System.getenv("CM_KEYSTORE_PATH"))
+                storePassword = System.getenv("CM_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("CM_KEY_ALIAS")
+                keyPassword = System.getenv("CM_KEY_PASSWORD")
+            } else {
+                storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
         }
-
-        val error = "variable not found in local.properties"
-
-        // Define BuildConfig fields without revealing fallback values
-        buildConfigField(
-            "String",
-            "YOUR_API_KEY",
-            "\"${properties.getProperty("my.api.key") ?: throw RuntimeException(error)}\"",
-        )
     }
 
     buildTypes {
@@ -57,6 +61,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
