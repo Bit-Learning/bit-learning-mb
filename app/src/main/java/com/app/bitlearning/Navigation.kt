@@ -15,6 +15,7 @@ import com.app.bitlearning.features.coursedetail.ui.CourseDetailScreen
 import com.app.bitlearning.features.courses.ui.CoursesScreen
 import com.app.bitlearning.features.home.ui.HomeScreen
 import com.app.bitlearning.features.player.ui.PlayerScreen
+import com.app.bitlearning.features.profile.ui.EditProfileScreen
 import com.app.bitlearning.features.profile.ui.ProfileScreen
 import com.app.bitlearning.features.search.ui.SearchScreen
 import com.app.bitlearning.features.splash.ui.SplashScreen
@@ -26,6 +27,7 @@ object Routes {
     const val SEARCH = "search"
     const val COURSES = "courses"
     const val PROFILE = "profile"
+    const val EDIT_PROFILE = "edit_profile"
     const val COURSE_DETAIL = "course_detail/{courseId}"
     const val PLAYER = "player/{courseId}"
 
@@ -122,6 +124,13 @@ fun BitLearningNavGraph(navController: NavHostController) {
                         popUpTo(Routes.HOME) { inclusive = true }
                     }
                 },
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToEdit = { navController.navigate(Routes.EDIT_PROFILE) },
+            )
+        }
+
+        composable(Routes.EDIT_PROFILE) {
+            EditProfileScreen(
                 onNavigateBack = { navController.popBackStack() },
             )
         }

@@ -31,6 +31,7 @@ import com.app.bitlearning.core.common.theme.*
 fun ProfileScreen(
     onLogout: () -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToEdit: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -39,7 +40,7 @@ fun ProfileScreen(
     Scaffold(
         containerColor = Background,
         topBar = {
-            ProfileTopBar(onNavigateBack = onNavigateBack, onEdit = { /* TODO */ })
+            ProfileTopBar(onNavigateBack = onNavigateBack, onEdit = onNavigateToEdit)
         },
     ) { padding ->
         if (uiState.isLoading) {
