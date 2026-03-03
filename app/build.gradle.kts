@@ -16,8 +16,8 @@ val keystoreProperties = Properties().apply {
 
 android {
     val appId = "com.app.bitlearning"
-    val compileSdkVersion = 35
-    val targetSdkVersion = 35
+    val compileSdkVersion = 36
+    val targetSdkVersion = 36
     val minSdkVersion = 24
 
     namespace = appId
