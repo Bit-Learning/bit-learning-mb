@@ -43,6 +43,7 @@ fun CoursesScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToSearch: () -> Unit,
+    onNavigateToNotification: () -> Unit = {},
     viewModel: CoursesViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -92,7 +93,8 @@ fun CoursesScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(SurfaceVariant),
+                                .background(SurfaceVariant)
+                                .clickable { onNavigateToNotification() },
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(

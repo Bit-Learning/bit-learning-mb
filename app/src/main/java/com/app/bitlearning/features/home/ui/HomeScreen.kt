@@ -37,6 +37,7 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToCourses: () -> Unit,
     onNavigateToSearch: () -> Unit,
+    onNavigateToNotification: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -74,6 +75,7 @@ fun HomeScreen(
                         userName = uiState.user?.name?.split(" ")?.first() ?: "Bạn",
                         avatarUrl = uiState.user?.avatarUrl,
                         onAvatarClick = onNavigateToProfile,
+                        onNotificationClick = onNavigateToNotification,
                     )
                 }
 
@@ -139,6 +141,7 @@ private fun HomeTopBar(
     userName: String,
     avatarUrl: String?,
     onAvatarClick: () -> Unit,
+    onNotificationClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -171,7 +174,7 @@ private fun HomeTopBar(
             }
         }
         IconButton(
-            onClick = { /* TODO: Notifications */ },
+            onClick = onNotificationClick,
             modifier = Modifier
                 .size(42.dp)
                 .clip(RoundedCornerShape(12.dp))

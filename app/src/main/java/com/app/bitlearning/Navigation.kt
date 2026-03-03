@@ -14,6 +14,7 @@ import com.app.bitlearning.features.auth.ui.AuthScreen
 import com.app.bitlearning.features.coursedetail.ui.CourseDetailScreen
 import com.app.bitlearning.features.courses.ui.CoursesScreen
 import com.app.bitlearning.features.home.ui.HomeScreen
+import com.app.bitlearning.features.notification.ui.NotificationScreen
 import com.app.bitlearning.features.player.ui.PlayerScreen
 import com.app.bitlearning.features.profile.ui.EditProfileScreen
 import com.app.bitlearning.features.profile.ui.MyCertificatesScreen
@@ -30,6 +31,7 @@ object Routes {
     const val PROFILE = "profile"
     const val EDIT_PROFILE = "edit_profile"
     const val MY_CERTIFICATES = "my_certificates"
+    const val NOTIFICATION = "notification"
     const val COURSE_DETAIL = "course_detail/{courseId}"
     const val PLAYER = "player/{courseId}"
 
@@ -82,6 +84,9 @@ fun BitLearningNavGraph(navController: NavHostController) {
                 onNavigateToSearch = {
                     navController.navigate(Routes.SEARCH)
                 },
+                onNavigateToNotification = {
+                    navController.navigate(Routes.NOTIFICATION)
+                },
             )
         }
 
@@ -98,6 +103,9 @@ fun BitLearningNavGraph(navController: NavHostController) {
                 },
                 onNavigateToSearch = {
                     navController.navigate(Routes.SEARCH)
+                },
+                onNavigateToNotification = {
+                    navController.navigate(Routes.NOTIFICATION)
                 },
             )
         }
@@ -140,6 +148,19 @@ fun BitLearningNavGraph(navController: NavHostController) {
 
         composable(Routes.MY_CERTIFICATES) {
             MyCertificatesScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToHome = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME) { inclusive = false }
+                    }
+                },
+                onNavigateToCourses = { navController.navigate(Routes.COURSES) },
+                onNavigateToProfile = { navController.navigate(Routes.PROFILE) },
+            )
+        }
+
+        composable(Routes.NOTIFICATION) {
+            NotificationScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToHome = {
                     navController.navigate(Routes.HOME) {
