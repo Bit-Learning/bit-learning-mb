@@ -10,8 +10,29 @@ plugins {
     id("com.google.dagger.hilt.android")
 }
 
-val keystoreProperties = Properties().apply {
-    load(FileInputStream(rootProject.file("keystore.properties")))
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+// get version code from the specified property argument `-PversionCode` during the build call
+fun getMyVersionCode(): Int {
+    return if (project.hasProperty("versionCode")) {
+        project.property("versionCode").toString().toInt()
+    } else {
+        1
+    }
+}
+
+// get version name from the specified property argument `-PversionName` during the build call
+fun getMyVersionName(): String {
+    return if (project.hasProperty("versionName")) {
+        project.property("versionName").toString()
+    } else {
+        "1.0"
+    }
 }
 
 android {
@@ -27,8 +48,8 @@ android {
         applicationId = appId
         minSdk = minSdkVersion
         targetSdk = targetSdkVersion
-        versionCode = 1
-        versionName = "0.0.1"
+        versionCode = getMyVersionCode()
+        versionName = getMyVersionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -47,9 +68,9 @@ android {
                 keyPassword = System.getenv("CM_KEY_PASSWORD")
             } else {
                 storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
-                storePassword = keystoreProperties["storePassword"] as String
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
+                storePassword = keystoreProperties["storePassword"] as String?
+                keyAlias = keystoreProperties["keyAlias"] as String?
+                keyPassword = keystoreProperties["keyPassword"] as String?
             }
         }
     }
