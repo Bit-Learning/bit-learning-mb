@@ -20,22 +20,22 @@ import okhttp3.Response
  * never on the main thread.
  */
 class AuthInterceptor
-    @Inject
-    constructor(
-        private val prefs: AppPreferences,
-    ) : Interceptor {
-        override fun intercept(chain: Interceptor.Chain): Response {
-            val token = prefs.getAccessTokenBlocking()
-            val request =
-                if (!token.isNullOrBlank()) {
-                    chain
-                        .request()
-                        .newBuilder()
-                        .header("Authorization", "Bearer $token")
-                        .build()
-                } else {
-                    chain.request()
-                }
-            return chain.proceed(request)
-        }
+@Inject
+constructor(
+    private val prefs: AppPreferences,
+) : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val token = prefs.getAccessTokenBlocking()
+        val request =
+            if (!token.isNullOrBlank()) {
+                chain
+                    .request()
+                    .newBuilder()
+                    .header("Authorization", "Bearer $token")
+                    .build()
+            } else {
+                chain.request()
+            }
+        return chain.proceed(request)
     }
+}
