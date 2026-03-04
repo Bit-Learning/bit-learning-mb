@@ -257,7 +257,7 @@ private fun AuthDialog(
         }
     }
 
-        // ── Dialog UI ─────────────────────────────────────────────────────────────
+    // ── Dialog UI ─────────────────────────────────────────────────────────────
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(24.dp),

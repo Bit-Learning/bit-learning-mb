@@ -40,133 +40,129 @@ import kotlinx.coroutines.flow.MutableStateFlow
  */
 @Singleton
 class RealAuthRepositoryImpl
-    @Inject
-    constructor(
-        private val api: BitLearningApiService,
-        private val prefs: AppPreferences,
-        private val log: MainLog,
-    ) : AuthRepository {
+@Inject
+constructor(
+    private val api: BitLearningApiService,
+    private val prefs: AppPreferences,
+    private val log: MainLog,
+) : AuthRepository {
 
-        companion object {
-            private const val TAG = "RealAuthRepo"
-        }
+    companion object {
+        private const val TAG = "RealAuthRepo"
+    }
 
-        private val _isLoggedIn = MutableStateFlow(false)
+    private val isLoggedIn = MutableStateFlow(false)
 
-        override fun isLoggedIn(): Flow<Boolean> = _isLoggedIn
+    override fun isLoggedIn(): Flow<Boolean> = isLoggedIn
 
-        // ── Email / Password ────────────────────────────────────────────────
+    // ── Email / Password ────────────────────────────────────────────────
 
-        override suspend fun login(request: LoginRequest): Result<AuthToken> =
-            runCatching {
-                val wrapper = api.login(LoginBody(request.email, request.password))
-                val data =
-                    wrapper.data
-                        ?: error(wrapper.message ?: "Đăng nhập thất bại")
+    override suspend fun login(request: LoginRequest): Result<AuthToken> = runCatching {
+        val wrapper = api.login(LoginBody(request.email, request.password))
+        val data =
+            wrapper.data
+                ?: error(wrapper.message ?: "Đăng nhập thất bại")
 
-                val accessToken =
-                    data.accessToken ?: error("Phản hồi từ máy chủ không hợp lệ")
+        val accessToken =
+            data.accessToken ?: error("Phản hồi từ máy chủ không hợp lệ")
 
-                prefs.saveAccessToken(accessToken)
-                _isLoggedIn.value = true
+        prefs.saveAccessToken(accessToken)
+        isLoggedIn.value = true
 
-                // Refresh token is managed via HttpOnly cookie by OkHttp's CookieJar.
-                AuthToken(
-                    accessToken = accessToken,
-                    refreshToken = "",
-                    expiresAt = 0L,
-                )
-            }
-
-        /**
-         * Registers a new user account.
-         *
-         * The backend sends an activation email — the user must click the link
-         * before they can log in. Returns [Result.success] on HTTP 2xx.
-         */
-        override suspend fun register(request: RegisterRequest): Result<Unit> =
-            runCatching {
-                // Split "Nguyễn Văn A" → firstName="Nguyễn Văn", lastName="A"
-                val parts = request.name.trim().split(" ")
-                val firstName = if (parts.size >= 2) parts.dropLast(1).joinToString(" ") else request.name
-                val lastName = if (parts.size >= 2) parts.last() else request.name
-
-                val wrapper =
-                    api.register(
-                        RegisterBody(
-                            firstName = firstName,
-                            lastName = lastName,
-                            email = request.email,
-                            password = request.password,
-                        ),
-                    )
-
-                if (wrapper.status in 200..299) {
-                    Unit
-                } else {
-                    error(wrapper.message ?: "Đăng ký thất bại")
-                }
-            }
-
-        // ── OAuth2 ──────────────────────────────────────────────────────────
+        // Refresh token is managed via HttpOnly cookie by OkHttp's CookieJar.
+        AuthToken(
+            accessToken = accessToken,
+            refreshToken = "",
+            expiresAt = 0L,
+        )
+    }
 
     /**
-         * Google Sign-In (ID Token flow).
-         * [idToken] comes from [GoogleSignInAccount.getIdToken()] on the device.
-         * The backend verifies it with Google and returns system JWTs.
-         */
-        override suspend fun loginWithGoogle(idToken: String): Result<AuthToken> =
-            runCatching {
-                log.d(TAG, "POST /auth/oauth2/google/mobile — gửi ID token (${idToken.length} ký tự)")
-                val wrapper = api.loginWithGoogleIdToken(GoogleIdTokenBody(idToken))
-                log.d(TAG, "Response status=${wrapper.status} message=${wrapper.message} data=${wrapper.data != null}")
-                if (wrapper.data == null) {
-                    log.e(TAG, "Backend trả về null data — message: ${wrapper.message}")
-                }
-                handleOAuth2Response(wrapper.data, wrapper.message)
-            }.also { result ->
-                result.onFailure { e ->
-                    log.e(TAG, "loginWithGoogle exception: ${e::class.simpleName}: ${e.message}")
-                }
-            }
+     * Registers a new user account.
+     *
+     * The backend sends an activation email — the user must click the link
+     * before they can log in. Returns [Result.success] on HTTP 2xx.
+     */
+    override suspend fun register(request: RegisterRequest): Result<Unit> = runCatching {
+        // Split "Nguyễn Văn A" → firstName="Nguyễn Văn", lastName="A"
+        val parts = request.name.trim().split(" ")
+        val firstName = if (parts.size >= 2) parts.dropLast(1).joinToString(" ") else request.name
+        val lastName = if (parts.size >= 2) parts.last() else request.name
 
-        override suspend fun loginWithGitHub(code: String): Result<AuthToken> =
-            runCatching {
-                // GitHub browser flow (not active on mobile yet – see initiateGitHubLogin).
-                // The redirect URI must match what was registered in the GitHub OAuth App.
-                val wrapper =
-                    api.loginWithGitHub(
-                        OAuth2LoginBody(code = code, redirectUri = "https://bit-learning.lch.id.vn/auth/github/callback"),
-                    )
-                handleOAuth2Response(wrapper.data, wrapper.message)
-            }
-
-        // ── Session ─────────────────────────────────────────────────────────
-
-        override suspend fun logout() {
-            runCatching { api.logout() }
-            prefs.clearTokens()
-            _isLoggedIn.value = false
-        }
-
-        override suspend fun getCurrentUser(): User? = null
-
-        // ── Helpers ─────────────────────────────────────────────────────────
-
-        private suspend fun handleOAuth2Response(
-            data: com.app.bitlearning.core.network.OAuth2ApiResponse?,
-            fallbackMessage: String?,
-        ): AuthToken {
-            val token =
-                data?.accessToken ?: error(fallbackMessage ?: "OAuth2 đăng nhập thất bại")
-
-            prefs.saveAccessToken(token)
-            _isLoggedIn.value = true
-
-            return AuthToken(
-                accessToken = token,
-                refreshToken = data.refreshToken ?: "",
-                expiresAt = 0L,
+        val wrapper =
+            api.register(
+                RegisterBody(
+                    firstName = firstName,
+                    lastName = lastName,
+                    email = request.email,
+                    password = request.password,
+                ),
             )
+
+        if (wrapper.status in 200..299) {
+            Unit
+        } else {
+            error(wrapper.message ?: "Đăng ký thất bại")
         }
     }
+
+    // ── OAuth2 ──────────────────────────────────────────────────────────
+
+    /**
+     * Google Sign-In (ID Token flow).
+     * [idToken] comes from [GoogleSignInAccount.getIdToken()] on the device.
+     * The backend verifies it with Google and returns system JWTs.
+     */
+    override suspend fun loginWithGoogle(idToken: String): Result<AuthToken> = runCatching {
+        log.d(TAG, "POST /auth/oauth2/google/mobile — gửi ID token (${idToken.length} ký tự)")
+        val wrapper = api.loginWithGoogleIdToken(GoogleIdTokenBody(idToken))
+        log.d(TAG, "Response status=${wrapper.status} message=${wrapper.message} data=${wrapper.data != null}")
+        if (wrapper.data == null) {
+            log.e(TAG, "Backend trả về null data — message: ${wrapper.message}")
+        }
+        handleOAuth2Response(wrapper.data, wrapper.message)
+    }.also { result ->
+        result.onFailure { e ->
+            log.e(TAG, "loginWithGoogle exception: ${e::class.simpleName}: ${e.message}")
+        }
+    }
+
+    override suspend fun loginWithGitHub(code: String): Result<AuthToken> = runCatching {
+        // GitHub browser flow (not active on mobile yet – see initiateGitHubLogin).
+        // The redirect URI must match what was registered in the GitHub OAuth App.
+        val wrapper =
+            api.loginWithGitHub(
+                OAuth2LoginBody(code = code, redirectUri = "https://bit-learning.lch.id.vn/auth/github/callback"),
+            )
+        handleOAuth2Response(wrapper.data, wrapper.message)
+    }
+
+    // ── Session ─────────────────────────────────────────────────────────
+
+    override suspend fun logout() {
+        runCatching { api.logout() }
+        prefs.clearTokens()
+        isLoggedIn.value = false
+    }
+
+    override suspend fun getCurrentUser(): User? = null
+
+    // ── Helpers ─────────────────────────────────────────────────────────
+
+    private suspend fun handleOAuth2Response(
+        data: com.app.bitlearning.core.network.OAuth2ApiResponse?,
+        fallbackMessage: String?,
+    ): AuthToken {
+        val token =
+            data?.accessToken ?: error(fallbackMessage ?: "OAuth2 đăng nhập thất bại")
+
+        prefs.saveAccessToken(token)
+        isLoggedIn.value = true
+
+        return AuthToken(
+            accessToken = token,
+            refreshToken = data.refreshToken ?: "",
+            expiresAt = 0L,
+        )
+    }
+}

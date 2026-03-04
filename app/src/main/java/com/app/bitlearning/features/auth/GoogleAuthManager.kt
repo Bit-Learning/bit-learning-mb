@@ -28,99 +28,97 @@ import kotlinx.coroutines.withContext
  */
 @Singleton
 class GoogleAuthManager
-    @Inject
-    constructor(
-        @ApplicationContext private val context: Context,
-    ) {
-        private val googleSignInClient: GoogleSignInClient by lazy {
-            val gso =
-                GoogleSignInOptions
-                    .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(OAuth2AppConfig.WEB_CLIENT_ID)
-                    .requestEmail()
-                    .build()
-            GoogleSignIn.getClient(context, gso)
-        }
+@Inject
+constructor(
+    @ApplicationContext private val context: Context,
+) {
+    private val googleSignInClient: GoogleSignInClient by lazy {
+        val gso =
+            GoogleSignInOptions
+                .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(OAuth2AppConfig.WEB_CLIENT_ID)
+                .requestEmail()
+                .build()
+        GoogleSignIn.getClient(context, gso)
+    }
 
-        /**
-         * Returns the [Intent] that should be launched to start the Google
-         * Sign-In account-picker.  Use this with an [ActivityResultLauncher].
-         *
-         * Signs out first so the account picker is always shown (avoids auto-
-         * selecting a stale account silently).
-         */
-        suspend fun getSignInIntent(): Result<Intent> = withContext(Dispatchers.IO) {
-            try {
-                // Always show the account picker.
-                googleSignInClient.signOut().await()
-                Result.success(googleSignInClient.signInIntent)
-            } catch (e: Exception) {
-                Log.e(TAG, "getSignInIntent failed: ${e.message}")
-                Result.failure(e)
-            }
-        }
-
-        /**
-         * Convenience accessor for the sign-in intent when you don't need the
-         * sign-out-first behaviour (e.g. when building the intent synchronously
-         * outside a coroutine scope).
-         */
-        fun getSignInIntentSync(): Intent = googleSignInClient.signInIntent
-
-        /**
-         * Extracts the Google ID token from the [Intent] returned by the
-         * account-picker activity result.
-         *
-         * @param data The [Intent] from [ActivityResult.data]; may be null if the
-         *   user cancelled.
-         * @return [Result.success] with the raw JWT string, or [Result.failure]
-         *   with a descriptive exception.
-         */
-        suspend fun getIdTokenFromResult(data: Intent?): Result<String> =
-            withContext(Dispatchers.IO) {
-                if (data == null) {
-                    Log.e(TAG, "Sign-in intent result was null (user likely cancelled)")
-                    return@withContext Result.failure(Exception("Sign-in cancelled"))
-                }
-                Log.d(TAG, "Processing Google Sign-In result…")
-                try {
-                    val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-                    val account = task.await()
-                    Log.d(TAG, "Got account: ${account.email}")
-
-                    val idToken = account.idToken
-                    Log.d(
-                        TAG,
-                        "ID token is ${if (idToken == null) "NULL" else "present (length: ${idToken.length})"}",
-                    )
-
-                    if (idToken != null) {
-                        Result.success(idToken)
-                    } else {
-                        Result.failure(Exception("No ID token found in the sign-in result"))
-                    }
-                } catch (e: ApiException) {
-                    Log.e(TAG, "Google Sign-In ApiException — code ${e.statusCode}: ${e.message}")
-                    Result.failure(Exception("Google Sign-In failed with code ${e.statusCode}: ${e.message}"))
-                } catch (e: Exception) {
-                    Log.e(TAG, "Google Sign-In unexpected error: ${e.message}")
-                    Result.failure(e)
-                }
-            }
-
-        /** Signs the current user out of Google on this device. */
-        suspend fun signOut(): Result<Unit> = withContext(Dispatchers.IO) {
-            try {
-                googleSignInClient.signOut().await()
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Log.e(TAG, "signOut failed: ${e.message}")
-                Result.failure(e)
-            }
-        }
-
-        private companion object {
-            private const val TAG = "GoogleAuthManager"
+    /**
+     * Returns the [Intent] that should be launched to start the Google
+     * Sign-In account-picker.  Use this with an [ActivityResultLauncher].
+     *
+     * Signs out first so the account picker is always shown (avoids auto-
+     * selecting a stale account silently).
+     */
+    suspend fun getSignInIntent(): Result<Intent> = withContext(Dispatchers.IO) {
+        try {
+            // Always show the account picker.
+            googleSignInClient.signOut().await()
+            Result.success(googleSignInClient.signInIntent)
+        } catch (e: Exception) {
+            Log.e(TAG, "getSignInIntent failed: ${e.message}")
+            Result.failure(e)
         }
     }
 
+    /**
+     * Convenience accessor for the sign-in intent when you don't need the
+     * sign-out-first behaviour (e.g. when building the intent synchronously
+     * outside a coroutine scope).
+     */
+    fun getSignInIntentSync(): Intent = googleSignInClient.signInIntent
+
+    /**
+     * Extracts the Google ID token from the [Intent] returned by the
+     * account-picker activity result.
+     *
+     * @param data The [Intent] from [ActivityResult.data]; may be null if the
+     *   user cancelled.
+     * @return [Result.success] with the raw JWT string, or [Result.failure]
+     *   with a descriptive exception.
+     */
+    suspend fun getIdTokenFromResult(data: Intent?): Result<String> = withContext(Dispatchers.IO) {
+        if (data == null) {
+            Log.e(TAG, "Sign-in intent result was null (user likely cancelled)")
+            return@withContext Result.failure(Exception("Sign-in cancelled"))
+        }
+        Log.d(TAG, "Processing Google Sign-In result…")
+        try {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            val account = task.await()
+            Log.d(TAG, "Got account: ${account.email}")
+
+            val idToken = account.idToken
+            Log.d(
+                TAG,
+                "ID token is ${if (idToken == null) "NULL" else "present (length: ${idToken.length})"}",
+            )
+
+            if (idToken != null) {
+                Result.success(idToken)
+            } else {
+                Result.failure(Exception("No ID token found in the sign-in result"))
+            }
+        } catch (e: ApiException) {
+            Log.e(TAG, "Google Sign-In ApiException — code ${e.statusCode}: ${e.message}")
+            Result.failure(Exception("Google Sign-In failed with code ${e.statusCode}: ${e.message}"))
+        } catch (e: Exception) {
+            Log.e(TAG, "Google Sign-In unexpected error: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    /** Signs the current user out of Google on this device. */
+    suspend fun signOut(): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            googleSignInClient.signOut().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "signOut failed: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    private companion object {
+        private const val TAG = "GoogleAuthManager"
+    }
+}

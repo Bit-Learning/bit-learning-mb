@@ -27,36 +27,31 @@ import kotlinx.coroutines.flow.first
  */
 @Singleton
 class AuthRepositoryDelegator
-    @Inject
-    constructor(
-        private val mock: MockAuthRepositoryImpl,
-        private val real: RealAuthRepositoryImpl,
-        private val prefs: AppPreferences,
-    ) : AuthRepository {
+@Inject
+constructor(
+    private val mock: MockAuthRepositoryImpl,
+    private val real: RealAuthRepositoryImpl,
+    private val prefs: AppPreferences,
+) : AuthRepository {
 
-        private val _isLoggedIn = MutableStateFlow(false)
+    private val isLoggedIn = MutableStateFlow(false)
 
-        private suspend fun delegate(): AuthRepository =
-            if (prefs.useMock.first()) mock else real
+    private suspend fun delegate(): AuthRepository = if (prefs.useMock.first()) mock else real
 
-        override fun isLoggedIn(): Flow<Boolean> = _isLoggedIn
+    override fun isLoggedIn(): Flow<Boolean> = isLoggedIn
 
-        override suspend fun login(request: LoginRequest): Result<AuthToken> =
-            delegate().login(request).also { if (it.isSuccess) _isLoggedIn.value = true }
+    override suspend fun login(request: LoginRequest): Result<AuthToken> = delegate().login(request).also { if (it.isSuccess) isLoggedIn.value = true }
 
-        override suspend fun register(request: RegisterRequest): Result<Unit> =
-            delegate().register(request)
+    override suspend fun register(request: RegisterRequest): Result<Unit> = delegate().register(request)
 
-        override suspend fun loginWithGoogle(code: String): Result<AuthToken> =
-            delegate().loginWithGoogle(code).also { if (it.isSuccess) _isLoggedIn.value = true }
+    override suspend fun loginWithGoogle(code: String): Result<AuthToken> = delegate().loginWithGoogle(code).also { if (it.isSuccess) isLoggedIn.value = true }
 
-        override suspend fun loginWithGitHub(code: String): Result<AuthToken> =
-            delegate().loginWithGitHub(code).also { if (it.isSuccess) _isLoggedIn.value = true }
+    override suspend fun loginWithGitHub(code: String): Result<AuthToken> = delegate().loginWithGitHub(code).also { if (it.isSuccess) isLoggedIn.value = true }
 
-        override suspend fun logout() {
-            delegate().logout()
-            _isLoggedIn.value = false
-        }
-
-        override suspend fun getCurrentUser(): User? = delegate().getCurrentUser()
+    override suspend fun logout() {
+        delegate().logout()
+        isLoggedIn.value = false
     }
+
+    override suspend fun getCurrentUser(): User? = delegate().getCurrentUser()
+}

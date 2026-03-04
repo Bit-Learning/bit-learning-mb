@@ -62,15 +62,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(client: OkHttpClient): Retrofit =
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+    fun provideRetrofit(client: OkHttpClient): Retrofit = Retrofit.Builder()
+        .baseUrl(BASE_URL)
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit): BitLearningApiService =
-        retrofit.create(BitLearningApiService::class.java)
+    fun provideApiService(retrofit: Retrofit): BitLearningApiService = retrofit.create(BitLearningApiService::class.java)
 }

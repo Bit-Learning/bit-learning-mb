@@ -162,12 +162,11 @@ class UserRepositoryImpl @Inject constructor(
             com.app.bitlearning.core.network.UpdateProfileBody(
                 name = user.name,
                 avatarUrl = user.avatar,
-            )
+            ),
         )
         val dto = wrapper.data ?: error(wrapper.message ?: "Cập nhật thất bại")
         dto.toDomain()
     }
 
-    override suspend fun getCertificates(): Result<List<Certificate>> =
-        Result.success(emptyList()) // TODO: wire up /users/certificates when backend is ready
+    override suspend fun getCertificates(): Result<List<Certificate>> = Result.success(emptyList()) // TODO: wire up /users/certificates when backend is ready
 }
