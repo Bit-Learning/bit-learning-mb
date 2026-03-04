@@ -25,11 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
-import com.app.bitlearning.features.auth.OAuth2AppConfig
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -246,43 +241,19 @@ private fun AuthDialog(
     onDismiss: () -> Unit,
 ) {
     var showPassword by remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
     // ── Google Sign-In launcher ─────────────────────────────────────────────
-
-    val googleSignInClient = remember {
-        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(OAuth2AppConfig.ANDROID_CLIENT_ID)
-            .requestEmail()
-            .build()
-        GoogleSignIn.getClient(context, options)
-    }
 
     val googleLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            val idToken = account?.idToken
-            if (idToken != null) {
-                viewModel.onGoogleIdToken(idToken)
-            } else {
-                viewModel.onOAuth2Error("Google Sign-In: không nhận được ID token")
-            }
-        } catch (e: ApiException) {
-            viewModel.onOAuth2Error("Google Sign-In thất bại: mã lỗi ${e.statusCode}")
-        }
+        viewModel.handleGoogleSignInResult(result.data)
     }
 
-    // ── Effect: launch Google Sign-In when requested by the ViewModel ─────────
-    LaunchedEffect(uiState.pendingGoogleSignIn) {
-        if (uiState.pendingGoogleSignIn) {
-            viewModel.clearGoogleSignInPending()
-            // Sign out first to always show the account picker
-            googleSignInClient.signOut().addOnCompleteListener {
-                googleLauncher.launch(googleSignInClient.signInIntent)
-            }
+    // Collect the one-shot intent event emitted by the ViewModel.
+    LaunchedEffect(Unit) {
+        viewModel.googleSignInEvent.collect { intent ->
+            googleLauncher.launch(intent)
         }
     }
 
