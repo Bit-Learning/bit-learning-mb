@@ -6,7 +6,7 @@
  */
 package com.app.bitlearning.core.network
 
-import com.app.bitlearning.data.repository.AuthRepositoryImpl
+import com.app.bitlearning.data.repository.AuthRepositoryDelegator
 import com.app.bitlearning.data.repository.CourseRepositoryImpl
 import com.app.bitlearning.data.repository.LessonRepositoryImpl
 import com.app.bitlearning.data.repository.UserRepositoryImpl
@@ -24,9 +24,10 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
 
+    /** Routes auth calls to the mock or real backend depending on [AppPreferences.useMock]. */
     @Binds
     @Singleton
-    abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
+    abstract fun bindAuthRepository(impl: AuthRepositoryDelegator): AuthRepository
 
     @Binds
     @Singleton

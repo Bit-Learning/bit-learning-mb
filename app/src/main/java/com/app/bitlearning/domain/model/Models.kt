@@ -13,7 +13,7 @@ data class User(
     val id: String,
     val name: String,
     val email: String,
-    val avatarUrl: String?,
+    val avatar: String,
     val memberSince: Int,
     val isPremium: Boolean,
 )

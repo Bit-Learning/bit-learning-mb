@@ -64,7 +64,7 @@ fun ProfileScreen(
                         name = uiState.user?.name ?: "",
                         memberSince = uiState.user?.memberSince ?: 2024,
                         isPremium = uiState.user?.isPremium ?: false,
-                        avatarUrl = uiState.user?.avatarUrl,
+                        avatarUrl = uiState.user?.avatar,
                     )
                 }
 
