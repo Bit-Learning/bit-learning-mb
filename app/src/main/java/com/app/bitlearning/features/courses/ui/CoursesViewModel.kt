@@ -9,6 +9,7 @@ package com.app.bitlearning.features.courses.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.bitlearning.domain.model.Course
+import com.app.bitlearning.domain.model.CourseCategory
 import com.app.bitlearning.domain.repository.CourseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -19,9 +20,13 @@ import kotlinx.coroutines.launch
 
 data class CoursesUiState(
     val courses: List<Course> = emptyList(),
+    val selectedCategory: CourseCategory? = null,
     val isLoading: Boolean = true,
     val error: String? = null,
-)
+) {
+    val filteredCourses: List<Course>
+        get() = if (selectedCategory == null) courses else courses.filter { it.category == selectedCategory }
+}
 
 @HiltViewModel
 class CoursesViewModel @Inject constructor(
@@ -37,6 +42,10 @@ class CoursesViewModel @Inject constructor(
 
     fun refresh() {
         loadCourses()
+    }
+
+    fun setCategory(category: CourseCategory?) {
+        _uiState.update { it.copy(selectedCategory = category) }
     }
 
     private fun loadCourses() {

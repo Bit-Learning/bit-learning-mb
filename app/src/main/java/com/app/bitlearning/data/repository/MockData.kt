@@ -18,7 +18,7 @@ object MockData {
         id = "user_001",
         name = "Alex Harrison",
         email = "user@gmail.com",
-        avatarUrl = "https://randomuser.me/api/portraits/men/32.jpg",
+        avatar = "https://randomuser.me/api/portraits/men/32.jpg",
         memberSince = 2022,
         isPremium = true,
     )
@@ -153,6 +153,27 @@ object MockData {
             courseTitle = "Python cho Khoa học dữ liệu",
             issuedDate = "15/01/2024",
             thumbnailUrl = "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=300",
+        ),
+        Certificate(
+            id = "cert_002",
+            courseId = "c001",
+            courseTitle = "Hệ thống thiết kế UI nâng cao",
+            issuedDate = "20/10/2023",
+            thumbnailUrl = "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=300",
+        ),
+        Certificate(
+            id = "cert_003",
+            courseId = "c004",
+            courseTitle = "Khóa học Full-Stack",
+            issuedDate = "15/09/2023",
+            thumbnailUrl = "https://images.unsplash.com/photo-1555099962-4199c345e5dd?w=300",
+        ),
+        Certificate(
+            id = "cert_004",
+            courseId = "c005",
+            courseTitle = "Marketing kỹ thuật số cơ bản",
+            issuedDate = "02/08/2023",
+            thumbnailUrl = "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=300",
         ),
     )
 }

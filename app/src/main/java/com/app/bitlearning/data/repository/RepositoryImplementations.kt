@@ -6,6 +6,8 @@
  */
 package com.app.bitlearning.data.repository
 
+import com.app.bitlearning.core.network.BitLearningApiService
+import com.app.bitlearning.data.mapper.toDomain
 import com.app.bitlearning.domain.model.*
 import com.app.bitlearning.domain.repository.*
 import javax.inject.Inject
@@ -18,7 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 //  Auth Repository Implementation (Mock)
 // ─────────────────────────────────────────────
 @Singleton
-class AuthRepositoryImpl @Inject constructor() : AuthRepository {
+class MockAuthRepositoryImpl @Inject constructor() : AuthRepository {
 
     private val isLoggedInState = MutableStateFlow(false)
 
@@ -38,27 +40,46 @@ class AuthRepositoryImpl @Inject constructor() : AuthRepository {
         }
     }
 
-    override suspend fun register(request: RegisterRequest): Result<AuthToken> {
+    override suspend fun register(request: RegisterRequest): Result<Unit> {
         delay(1500)
         return if (request.email.contains("@") && request.password.length >= 6) {
+            // Mock auto-logs in after registration (no email activation step)
             isLoggedInState.value = true
-            Result.success(
-                AuthToken(
-                    accessToken = "mock_access_token_new",
-                    refreshToken = "mock_refresh_token_new",
-                    expiresAt = System.currentTimeMillis() + 3600_000,
-                ),
-            )
+            Result.success(Unit)
         } else {
             Result.failure(Exception("Thông tin đăng ký không hợp lệ"))
         }
+    }
+
+    override suspend fun loginWithGoogle(idToken: String): Result<AuthToken> {
+        delay(1000)
+        isLoggedInState.value = true
+        return Result.success(
+            AuthToken(
+                accessToken = "mock_google_token_${System.currentTimeMillis()}",
+                refreshToken = "mock_refresh",
+                expiresAt = System.currentTimeMillis() + 3600_000,
+            ),
+        )
+    }
+
+    override suspend fun loginWithGitHub(code: String): Result<AuthToken> {
+        delay(1000)
+        isLoggedInState.value = true
+        return Result.success(
+            AuthToken(
+                accessToken = "mock_github_token_${System.currentTimeMillis()}",
+                refreshToken = "mock_refresh",
+                expiresAt = System.currentTimeMillis() + 3600_000,
+            ),
+        )
     }
 
     override suspend fun logout() {
         isLoggedInState.value = false
     }
 
-    override suspend fun getCurrentUser(): User = MockData.currentUser
+    override suspend fun getCurrentUser(): User? = MockData.currentUser
 
     override fun isLoggedIn(): Flow<Boolean> = isLoggedInState
 }
@@ -123,23 +144,29 @@ class LessonRepositoryImpl @Inject constructor() : LessonRepository {
 }
 
 // ─────────────────────────────────────────────
-//  User Repository Implementation (Mock)
+//  User Repository Implementation (Real API)
 // ─────────────────────────────────────────────
 @Singleton
-class UserRepositoryImpl @Inject constructor() : UserRepository {
+class UserRepositoryImpl @Inject constructor(
+    private val api: BitLearningApiService,
+) : UserRepository {
 
-    override suspend fun getUserProfile(): Result<User> {
-        delay(400)
-        return Result.success(MockData.currentUser)
+    override suspend fun getUserProfile(): Result<User> = runCatching {
+        val wrapper = api.getProfile()
+        val dto = wrapper.data ?: error(wrapper.message ?: "Không thể tải hồ sơ")
+        dto.toDomain()
     }
 
-    override suspend fun updateProfile(user: User): Result<User> {
-        delay(600)
-        return Result.success(user)
+    override suspend fun updateProfile(user: User): Result<User> = runCatching {
+        val wrapper = api.updateProfile(
+            com.app.bitlearning.core.network.UpdateProfileBody(
+                name = user.name,
+                avatarUrl = user.avatar,
+            ),
+        )
+        val dto = wrapper.data ?: error(wrapper.message ?: "Cập nhật thất bại")
+        dto.toDomain()
     }
 
-    override suspend fun getCertificates(): Result<List<Certificate>> {
-        delay(400)
-        return Result.success(MockData.certificates)
-    }
+    override suspend fun getCertificates(): Result<List<Certificate>> = Result.success(emptyList()) // TODO: wire up /users/certificates when backend is ready
 }

@@ -41,17 +41,16 @@ fun LessonDto.toDomain(): Lesson = Lesson(
     isLocked = isLocked,
 )
 
-fun UserDto.toDomain(): User = User(
-    id = id,
-    name = name,
-    email = email,
-    avatarUrl = avatarUrl,
-    memberSince = memberSince,
-    isPremium = isPremium,
+fun UserApiDto.toDomain(): User = User(
+    id = id?.toString() ?: "",
+    name = listOfNotNull(firstName?.trim(), lastName?.trim())
+        .filter { it.isNotBlank() }
+        .joinToString(" ")
+        .ifBlank { username ?: email ?: "" },
+    email = email ?: "",
+    avatar = avatar ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+    memberSince = createdAt?.take(4)?.toIntOrNull() ?: 2024,
+    isPremium = role?.equals("PREMIUM", ignoreCase = true) ?: false,
 )
 
-fun TokenResponse.toDomain(): AuthToken = AuthToken(
-    accessToken = accessToken,
-    refreshToken = refreshToken,
-    expiresAt = expiresAt,
-)
+// TokenResponse mapper removed — auth tokens are handled directly by the repository layer.

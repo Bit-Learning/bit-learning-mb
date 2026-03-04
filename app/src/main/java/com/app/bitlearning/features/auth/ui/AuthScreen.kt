@@ -6,6 +6,8 @@
  */
 package com.app.bitlearning.features.auth.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,7 +15,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -23,9 +24,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -232,6 +230,10 @@ private fun OnboardingPageContent(page: OnboardingPage) {
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Auth Dialog
+// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun AuthDialog(
     uiState: AuthUiState,
@@ -240,6 +242,22 @@ private fun AuthDialog(
 ) {
     var showPassword by remember { mutableStateOf(false) }
 
+    // ── Google Sign-In launcher ─────────────────────────────────────────────
+
+    val googleLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        viewModel.handleGoogleSignInResult(result.data)
+    }
+
+    // Collect the one-shot intent event emitted by the ViewModel.
+    LaunchedEffect(Unit) {
+        viewModel.googleSignInEvent.collect { intent ->
+            googleLauncher.launch(intent)
+        }
+    }
+
+    // ── Dialog UI ─────────────────────────────────────────────────────────────
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(24.dp),
@@ -277,8 +295,20 @@ private fun AuthDialog(
                             style = MaterialTheme.typography.headlineMedium,
                         )
                     }
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant)
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        // ── Mock / API toggle chip ────────────────────────────
+                        MockToggleChip(
+                            useMock = uiState.useMock,
+                            onToggle = { viewModel.toggleMock() },
+                        )
+
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant)
+                        }
                     }
                 }
 
@@ -302,6 +332,31 @@ private fun AuthDialog(
                 }
 
                 BLDivider()
+
+                // Register success banner (real mode only)
+                if (uiState.registerMessage != null) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.Top,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = null,
+                                tint = Primary,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Text(
+                                text = uiState.registerMessage,
+                                style = MaterialTheme.typography.bodySmall.copy(color = Primary),
+                            )
+                        }
+                    }
+                }
 
                 // Fields
                 if (!uiState.isLoginMode) {
@@ -387,7 +442,9 @@ private fun AuthDialog(
                         } else {
                             "Tạo tài khoản →"
                         },
-                        onClick = { if (uiState.isLoginMode) viewModel.login() else viewModel.register() },
+                        onClick = {
+                            if (uiState.isLoginMode) viewModel.login() else viewModel.register()
+                        },
                     )
                 }
 
@@ -407,21 +464,19 @@ private fun AuthDialog(
                     BLDivider(Modifier.weight(1f))
                 }
 
-                // Social login
+                // Social login buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     SocialLoginButton(
                         text = "Google",
-                        iconUrl = null, // Would use actual Google icon in production
-                        onClick = { /* TODO */ },
+                        onClick = { viewModel.initiateGoogleLogin() },
                         modifier = Modifier.weight(1f),
                     )
                     SocialLoginButton(
-                        text = "Apple",
-                        iconUrl = null,
-                        onClick = { /* TODO */ },
+                        text = "GitHub",
+                        onClick = { viewModel.initiateGitHubLogin() },
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -438,6 +493,44 @@ private fun AuthDialog(
             }
         }
     }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Supporting composables
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Small chip that shows the current mode (Mock / API) and lets the user toggle it.
+ * Tapping it switches between local mock data and the real backend.
+ */
+@Composable
+private fun MockToggleChip(
+    useMock: Boolean,
+    onToggle: () -> Unit,
+) {
+    FilterChip(
+        selected = useMock,
+        onClick = onToggle,
+        label = {
+            Text(
+                text = if (useMock) "Mock" else "API",
+                style = MaterialTheme.typography.labelSmall,
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = if (useMock) Icons.Filled.BugReport else Icons.Filled.Wifi,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+            )
+        },
+        shape = RoundedCornerShape(8.dp),
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = Primary.copy(alpha = 0.15f),
+            selectedLabelColor = Primary,
+            selectedLeadingIconColor = Primary,
+        ),
+    )
 }
 
 @Composable
@@ -477,7 +570,6 @@ private fun TabButton(
 @Composable
 private fun SocialLoginButton(
     text: String,
-    iconUrl: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {

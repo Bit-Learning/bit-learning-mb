@@ -10,8 +10,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -21,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -37,6 +34,7 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToCourses: () -> Unit,
     onNavigateToSearch: () -> Unit,
+    onNavigateToNotification: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -72,8 +70,9 @@ fun HomeScreen(
                 item {
                     HomeTopBar(
                         userName = uiState.user?.name?.split(" ")?.first() ?: "Bạn",
-                        avatarUrl = uiState.user?.avatarUrl,
+                        avatarUrl = uiState.user?.avatar,
                         onAvatarClick = onNavigateToProfile,
+                        onNotificationClick = onNavigateToNotification,
                     )
                 }
 
@@ -139,6 +138,7 @@ private fun HomeTopBar(
     userName: String,
     avatarUrl: String?,
     onAvatarClick: () -> Unit,
+    onNotificationClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -171,7 +171,7 @@ private fun HomeTopBar(
             }
         }
         IconButton(
-            onClick = { /* TODO: Notifications */ },
+            onClick = onNotificationClick,
             modifier = Modifier
                 .size(42.dp)
                 .clip(RoundedCornerShape(12.dp))

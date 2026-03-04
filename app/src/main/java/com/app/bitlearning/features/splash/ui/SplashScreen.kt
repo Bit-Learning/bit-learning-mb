@@ -91,7 +91,7 @@ fun SplashScreen(
                 modifier = Modifier.scale(scale),
             ) {
                 Text(
-                    text = "BitLearning",
+                    text = "Bit Learning",
                     style = MaterialTheme.typography.displayMedium.copy(
                         color = OnPrimary,
                         fontWeight = FontWeight.ExtraBold,

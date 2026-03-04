@@ -18,22 +18,20 @@ if (keystorePropertiesFile.exists()) {
 }
 
 // get version code from the specified property argument `-PversionCode` during the build call
-fun getMyVersionCode(): Int {
-    return if (project.hasProperty("versionCode")) {
+fun getMyVersionCode(): Int =
+    if (project.hasProperty("versionCode")) {
         project.property("versionCode").toString().toInt()
     } else {
         1
     }
-}
 
 // get version name from the specified property argument `-PversionName` during the build call
-fun getMyVersionName(): String {
-    return if (project.hasProperty("versionName")) {
+fun getMyVersionName(): String =
+    if (project.hasProperty("versionName")) {
         project.property("versionName").toString()
     } else {
         "1.0"
     }
-}
 
 android {
     val appId = "com.app.bitlearning"
@@ -56,7 +54,7 @@ android {
             useSupportLibrary = true
         }
 
-        manifestPlaceholders["appAuthRedirectScheme"] = appId
+        manifestPlaceholders["appAuthRedirectScheme"] = "" // no longer used
     }
 
     signingConfigs {
@@ -148,6 +146,9 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.okhttp.urlconnection)
 
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     // accompanist
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.accompanist.pager)
@@ -171,7 +172,12 @@ dependencies {
     // splashscreen
     implementation(libs.androidx.core.splashscreen)
 
-    implementation(libs.appauth)
+    // Google Sign-In SDK (ID Token flow – no redirect URI)
+    implementation(libs.play.services.auth)
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    // AppAuth kept as transitive dep; active usage removed
+    // implementation(libs.appauth)
     implementation(libs.androidx.browser)
     implementation(libs.androidx.animation)
     implementation(libs.stripe.android.v2250)
