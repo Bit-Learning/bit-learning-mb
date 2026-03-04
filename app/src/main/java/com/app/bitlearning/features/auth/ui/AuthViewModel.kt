@@ -6,6 +6,7 @@
  */
 package com.app.bitlearning.features.auth.ui
 
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.bitlearning.core.log.MainLog
@@ -13,10 +14,14 @@ import com.app.bitlearning.core.preferences.AppPreferences
 import com.app.bitlearning.domain.model.LoginRequest
 import com.app.bitlearning.domain.model.RegisterRequest
 import com.app.bitlearning.domain.repository.AuthRepository
+import com.app.bitlearning.features.auth.GoogleAuthManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -35,11 +40,6 @@ data class AuthUiState(
     /** true → local mock data; false → real API at [NetworkModule.BASE_URL] */
     val useMock: Boolean = true,
     /**
-     * Set to true in real mode to signal [AuthScreen] to launch the Google
-     * Sign-In SDK intent. Cleared automatically after the intent is launched.
-     */
-    val pendingGoogleSignIn: Boolean = false,
-    /**
      * Set after a successful *real* registration to prompt the user to check
      * their email (backend sends an activation email before login is allowed).
      */
@@ -57,6 +57,7 @@ class AuthViewModel
         private val authRepository: AuthRepository,
         private val prefs: AppPreferences,
         private val log: MainLog,
+        private val googleAuthManager: GoogleAuthManager,
     ) : ViewModel() {
 
         companion object {
@@ -65,6 +66,14 @@ class AuthViewModel
 
         private val _uiState = MutableStateFlow(AuthUiState())
         val uiState: StateFlow<AuthUiState> = _uiState
+
+        /**
+         * One-shot event that carries the Google Sign-In [Intent] to be launched
+         * by the UI layer.  Using a [SharedFlow] avoids storing UI-layer concerns
+         * (Activity intents) in the persistent [AuthUiState].
+         */
+        private val _googleSignInEvent = MutableSharedFlow<Intent>(extraBufferCapacity = 1)
+        val googleSignInEvent: SharedFlow<Intent> = _googleSignInEvent.asSharedFlow()
 
         init {
             // Keep [AuthUiState.useMock] in sync with persisted preference.
@@ -152,24 +161,49 @@ class AuthViewModel
         /**
          * Start Google Sign-In.
          * - **Mock**: directly resolves with a fake ID token.
-         * - **Real**: sets [AuthUiState.pendingGoogleSignIn] = true; the screen
-         *   launches the Google Sign-In SDK intent and calls back [onGoogleIdToken].
+         * - **Real**: obtains the sign-in [Intent] via [GoogleAuthManager] and
+         *   emits it on [googleSignInEvent] so the UI can launch it.
          */
         fun initiateGoogleLogin() {
             log.d(TAG, "initiateGoogleLogin() — useMock=${_uiState.value.useMock}")
             if (_uiState.value.useMock) {
                 onGoogleIdToken("mock_google_id_token_${System.currentTimeMillis()}")
             } else {
-                log.d(TAG, "Setting pendingGoogleSignIn=true — chờ Android SDK launcher")
-                _uiState.update { it.copy(pendingGoogleSignIn = true, error = null) }
+                viewModelScope.launch {
+                    _uiState.update { it.copy(isLoading = true, error = null) }
+                    googleAuthManager.getSignInIntent()
+                        .onSuccess { intent ->
+                            _uiState.update { it.copy(isLoading = false) }
+                            _googleSignInEvent.emit(intent)
+                        }
+                        .onFailure { e ->
+                            log.e(TAG, "getSignInIntent failed: ${e.message}")
+                            _uiState.update { it.copy(isLoading = false, error = e.message) }
+                        }
+                }
             }
         }
 
-        /** Call after the Google Sign-In intent has been launched to clear the flag. */
-        fun clearGoogleSignInPending() = _uiState.update { it.copy(pendingGoogleSignIn = false) }
+        /**
+         * Called by the UI with the [Intent] returned from the Google Sign-In
+         * activity result.  Delegates token extraction to [GoogleAuthManager].
+         *
+         * @param data The result [Intent]; pass `null` if the user cancelled.
+         */
+        fun handleGoogleSignInResult(data: Intent?) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, error = null) }
+                googleAuthManager.getIdTokenFromResult(data)
+                    .onSuccess { idToken -> onGoogleIdToken(idToken) }
+                    .onFailure { e ->
+                        log.e(TAG, "handleGoogleSignInResult failed: ${e.message}")
+                        _uiState.update { it.copy(isLoading = false, error = e.message) }
+                    }
+            }
+        }
 
         /**
-         * Called by [AuthScreen] (or mock) once the Google ID token is available.
+         * Called once the Google ID token is available.
          * Posts the token to the backend for verification and JWT exchange.
          *
          * @param idToken the raw JWT from [GoogleSignInAccount.getIdToken()].
@@ -178,10 +212,10 @@ class AuthViewModel
             log.d(TAG, "onGoogleIdToken() — nhận được ID token, độ dài=${idToken.length} ký tự")
             log.d(TAG, "ID token (20 ký tự đầu): ${idToken.take(20)}...")
             viewModelScope.launch {
-                _uiState.update { it.copy(isLoading = true, error = null, pendingGoogleSignIn = false) }
+                _uiState.update { it.copy(isLoading = true, error = null) }
                 log.d(TAG, "Gọi authRepository.loginWithGoogle(idToken)...")
                 authRepository.loginWithGoogle(idToken)
-                    .onSuccess { token ->
+                    .onSuccess {
                         log.i(TAG, "loginWithGoogle SUCCESS — accessToken nhận được")
                         _uiState.update { it.copy(isLoading = false, authSuccess = true) }
                     }
@@ -216,6 +250,6 @@ class AuthViewModel
 
         fun onOAuth2Error(message: String) {
             log.e(TAG, "onOAuth2Error() — $message")
-            _uiState.update { it.copy(isLoading = false, error = message, pendingGoogleSignIn = false) }
+            _uiState.update { it.copy(isLoading = false, error = message) }
         }
     }
