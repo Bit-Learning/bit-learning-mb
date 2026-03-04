@@ -1,6 +1,7 @@
 [versions]
 accompanistPager = "0.36.0"
 agp = "8.9.3"
+datastore = "1.1.1"
 animation = "1.6.7"
 appauth = "0.11.1"
 barcodeScanning = "17.3.0"
@@ -70,6 +71,7 @@ androidx-material-icons-extended = { module = "androidx.compose.material:materia
 
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 appauth = { module = "net.openid:appauth", version.ref = "appauth" }
 
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilNetworkOkhttp" }

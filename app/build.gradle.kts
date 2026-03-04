@@ -54,7 +54,7 @@ android {
             useSupportLibrary = true
         }
 
-        manifestPlaceholders["appAuthRedirectScheme"] = appId
+        manifestPlaceholders["appAuthRedirectScheme"] = "" // no longer used
     }
 
     signingConfigs {
@@ -146,6 +146,9 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.okhttp.urlconnection)
 
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     // accompanist
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.accompanist.pager)
@@ -169,7 +172,12 @@ dependencies {
     // splashscreen
     implementation(libs.androidx.core.splashscreen)
 
-    implementation(libs.appauth)
+    // Google Sign-In SDK (ID Token flow – no redirect URI)
+    implementation(libs.play.services.auth)
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    // AppAuth kept as transitive dep; active usage removed
+    // implementation(libs.appauth)
     implementation(libs.androidx.browser)
     implementation(libs.androidx.animation)
     implementation(libs.stripe.android.v2250)

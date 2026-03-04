@@ -18,7 +18,7 @@ object MockData {
         id = "user_001",
         name = "Alex Harrison",
         email = "user@gmail.com",
-        avatarUrl = "https://randomuser.me/api/portraits/men/32.jpg",
+        avatar = "https://randomuser.me/api/portraits/men/32.jpg",
         memberSince = 2022,
         isPremium = true,
     )

@@ -52,7 +52,7 @@ class EditProfileViewModel @Inject constructor(
                     phone = "",
                     birthDate = "",
                     bio = "",
-                    avatarUrl = user?.avatarUrl,
+                    avatarUrl = user?.avatar,
                     isLoading = false,
                 )
             }
@@ -73,7 +73,7 @@ class EditProfileViewModel @Inject constructor(
                 id = "",
                 name = current.name,
                 email = current.email,
-                avatarUrl = current.avatarUrl,
+                avatar = current.avatarUrl ?: "",
                 memberSince = 2024,
                 isPremium = false,
             )
