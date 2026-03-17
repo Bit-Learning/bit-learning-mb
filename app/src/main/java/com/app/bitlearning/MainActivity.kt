@@ -6,24 +6,48 @@
  */
 package com.app.bitlearning
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.mutableStateOf
 import androidx.navigation.compose.rememberNavController
 import com.app.bitlearning.core.common.theme.BitLearningTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    // Holds the deep link URI from either cold-start or hot-start intents
+    private val deepLinkUri = mutableStateOf<Uri?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Capture deep link URI when app is launched from a cold start via App Link
+        deepLinkUri.value = intent?.data
+
         setContent {
             BitLearningTheme {
                 val navController = rememberNavController()
-                BitLearningNavGraph(navController = navController)
+                BitLearningNavGraph(
+                    navController = navController,
+                    deepLinkUri = deepLinkUri.value,
+                )
             }
         }
+    }
+
+    /**
+     * Called when the app is already running (singleTask launch mode) and a new
+     * App Link intent arrives. Updates the deep link state so the NavGraph reacts.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        deepLinkUri.value = intent.data
     }
 }

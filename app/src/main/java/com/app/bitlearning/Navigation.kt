@@ -6,7 +6,9 @@
  */
 package com.app.bitlearning
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -48,7 +50,32 @@ object Routes {
 }
 
 @Composable
-fun BitLearningNavGraph(navController: NavHostController) {
+fun BitLearningNavGraph(
+    navController: NavHostController,
+    deepLinkUri: Uri? = null,
+) {
+    // Handle incoming App Link deep link URI.
+    // Fires whenever deepLinkUri changes (cold-start or onNewIntent hot-start).
+    // Navigation happens after the SplashScreen resolves auth state, so we
+    // store the intent and navigate from here once the graph is ready.
+    LaunchedEffect(deepLinkUri) {
+        deepLinkUri ?: return@LaunchedEffect
+        val screen = deepLinkUri.getQueryParameter("screen")
+        val id = deepLinkUri.getQueryParameter("id")
+        when (screen) {
+            "course" -> {
+                if (id != null) {
+                    navController.navigate(Routes.courseDetail(id))
+                } else {
+                    navController.navigate(Routes.COURSES)
+                }
+            }
+            "profile" -> navController.navigate(Routes.PROFILE)
+            "search"  -> navController.navigate(Routes.SEARCH)
+            else      -> navController.navigate(Routes.HOME)
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Routes.SPLASH,
