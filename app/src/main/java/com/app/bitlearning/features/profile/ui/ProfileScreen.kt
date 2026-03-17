@@ -111,12 +111,12 @@ fun ProfileScreen(
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     ) {
                         Column {
-                            BLMenuItemRow(
-                                title = "Phương thức thanh toán",
-                                icon = Icons.Filled.CreditCard,
-                                onClick = onNavigateToPaymentSetting,
-                            )
-                            BLDivider(Modifier.padding(horizontal = 16.dp))
+//                            BLMenuItemRow(
+//                                title = "Phương thức thanh toán",
+//                                icon = Icons.Filled.CreditCard,
+//                                onClick = onNavigateToPaymentSetting,
+//                            )
+//                            BLDivider(Modifier.padding(horizontal = 16.dp))
                             BLMenuItemRow(
                                 title = "Cài đặt thông báo",
                                 icon = Icons.Filled.Notifications,

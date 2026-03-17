@@ -6,6 +6,7 @@
  */
 package com.app.bitlearning.features.home.ui
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,7 +27,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.app.bitlearning.core.common.components.*
 import com.app.bitlearning.core.common.theme.*
+import com.app.bitlearning.core.log.MainLog
 import com.app.bitlearning.domain.model.Course
+import com.app.bitlearning.features.profile.ui.ProfileViewModel
 
 @Composable
 fun HomeScreen(
@@ -36,8 +39,10 @@ fun HomeScreen(
     onNavigateToSearch: () -> Unit,
     onNavigateToNotification: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
+    profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val profileUiState by profileViewModel.uiState.collectAsStateWithLifecycle()
     var currentTab by remember { mutableStateOf("home") }
 
     Scaffold(
@@ -69,8 +74,8 @@ fun HomeScreen(
                 // Top Bar
                 item {
                     HomeTopBar(
-                        userName = uiState.user?.name?.split(" ")?.first() ?: "Bạn",
-                        avatarUrl = uiState.user?.avatar,
+                        userName = profileUiState.user?.name?.split(" ")?.first() ?: "Bạn",
+                        avatarUrl = profileUiState.user?.avatar,
                         onAvatarClick = onNavigateToProfile,
                         onNotificationClick = onNavigateToNotification,
                     )
@@ -134,6 +139,19 @@ fun HomeScreen(
 //  Home Top Bar
 // ─────────────────────────────────────────────
 @Composable
+private fun rememberGreeting(): String {
+    val hour = remember {
+        java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    }
+
+    return when (hour) {
+        in 5..11 -> "CHÀO BUỔI SÁNG"
+        in 12..17 -> "CHÀO BUỔI CHIỀU"
+        else -> "CHÀO BUỔI TỐI"
+    }
+}
+
+@Composable
 private fun HomeTopBar(
     userName: String,
     avatarUrl: String?,
@@ -158,7 +176,7 @@ private fun HomeTopBar(
             )
             Column {
                 Text(
-                    text = "CHÀO BUỔI SÁNG",
+                    text = rememberGreeting(),
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = OnSurfaceMuted,
                         letterSpacing = 0.8.sp,
