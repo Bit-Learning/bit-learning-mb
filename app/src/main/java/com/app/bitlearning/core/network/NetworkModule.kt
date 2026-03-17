@@ -34,7 +34,7 @@ object NetworkModule {
      * For Android Emulator the host machine is accessible at 10.0.2.2.
      * For a physical device on the same network use the machine's LAN IP (e.g. 10.0.0.2).
      */
-    const val BASE_URL = "https://bit-api.lch.id.vn/api/"
+    const val BASE_URL = "https://bit-api-dev.lch.id.vn/api/"
 
     @Provides
     @Singleton

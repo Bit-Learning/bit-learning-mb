@@ -220,11 +220,11 @@ fun BitLearningNavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Routes.PAYMENT_SETTING) {
-            PaymentSettingScreen(
-                onNavigateBack = { navController.popBackStack() },
-            )
-        }
+//        composable(Routes.PAYMENT_SETTING) {
+//            PaymentSettingScreen(
+//                onNavigateBack = { navController.popBackStack() },
+//            )
+//        }
 
         composable(Routes.COURSE_DETAIL) { backStack ->
             val courseId = backStack.arguments?.getString("courseId") ?: return@composable
