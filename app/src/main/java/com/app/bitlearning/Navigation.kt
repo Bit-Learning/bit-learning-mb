@@ -71,8 +71,8 @@ fun BitLearningNavGraph(
                 }
             }
             "profile" -> navController.navigate(Routes.PROFILE)
-            "search"  -> navController.navigate(Routes.SEARCH)
-            else      -> navController.navigate(Routes.HOME)
+            "search" -> navController.navigate(Routes.SEARCH)
+            else -> navController.navigate(Routes.HOME)
         }
     }
 
