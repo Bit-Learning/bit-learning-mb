@@ -44,6 +44,11 @@ data class AuthUiState(
      * their email (backend sends an activation email before login is allowed).
      */
     val registerMessage: String? = null,
+    /**
+     * Optional status message for QR web login actions initiated from the
+     * mobile app (e.g. after scanning or confirming a QR code).
+     */
+    val qrMessage: String? = null,
 )
 
 // ─────────────────────────────────────────────
@@ -249,5 +254,60 @@ constructor(
     fun onOAuth2Error(message: String) {
         log.e(TAG, "onOAuth2Error() — $message")
         _uiState.update { it.copy(isLoading = false, error = message) }
+    }
+
+    // ── QR Web Login (mobile as authenticator) ─────────────────────────────
+
+    /**
+     * Called by a QR scanner UI after it reads the QR token from the web
+     * login screen. Marks the token as SCANNED on the backend so the web
+     * client can update its UI.
+     */
+    fun scanQrToken(qrToken: String) {
+        if (qrToken.isBlank()) {
+            _uiState.update { it.copy(error = "Mã QR không hợp lệ") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null, qrMessage = null) }
+            authRepository.scanQrToken(qrToken)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            qrMessage = "Đã quét mã QR. Vui lòng xác nhận để đăng nhập trên web.",
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                }
+        }
+    }
+
+    /**
+     * Called when the user explicitly approves the pending web login on
+     * their phone. Backend will create a web JWT and push it via SSE.
+     */
+    fun confirmQrLogin(qrToken: String) {
+        if (qrToken.isBlank()) {
+            _uiState.update { it.copy(error = "Mã QR không hợp lệ") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            authRepository.confirmQrLogin(qrToken)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            qrMessage = "Đã xác nhận đăng nhập. Bạn có thể sử dụng Bit Learning trên web.",
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                }
+        }
     }
 }

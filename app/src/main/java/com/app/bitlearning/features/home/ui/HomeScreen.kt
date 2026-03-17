@@ -35,6 +35,7 @@ fun HomeScreen(
     onNavigateToCourses: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToNotification: () -> Unit = {},
+    onNavigateToQrLogin: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -73,6 +74,7 @@ fun HomeScreen(
                         avatarUrl = uiState.user?.avatar,
                         onAvatarClick = onNavigateToProfile,
                         onNotificationClick = onNavigateToNotification,
+                        onQrLoginClick = onNavigateToQrLogin,
                     )
                 }
 
@@ -139,6 +141,7 @@ private fun HomeTopBar(
     avatarUrl: String?,
     onAvatarClick: () -> Unit,
     onNotificationClick: () -> Unit = {},
+    onQrLoginClick: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -170,18 +173,37 @@ private fun HomeTopBar(
                 )
             }
         }
-        IconButton(
-            onClick = onNotificationClick,
-            modifier = Modifier
-                .size(42.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(SurfaceVariant),
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = Icons.Filled.Notifications,
-                contentDescription = "Thông báo",
-                tint = OnSurface,
-            )
+            IconButton(
+                onClick = onQrLoginClick,
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(SurfaceVariant),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.QrCodeScanner,
+                    contentDescription = "Quét mã QR đăng nhập web",
+                    tint = OnSurface,
+                )
+            }
+
+            IconButton(
+                onClick = onNotificationClick,
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(SurfaceVariant),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Notifications,
+                    contentDescription = "Thông báo",
+                    tint = OnSurface,
+                )
+            }
         }
     }
 }

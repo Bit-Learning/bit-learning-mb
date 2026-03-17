@@ -48,6 +48,10 @@ constructor(
 
     override suspend fun loginWithGitHub(code: String): Result<AuthToken> = delegate().loginWithGitHub(code).also { if (it.isSuccess) isLoggedIn.value = true }
 
+    override suspend fun scanQrToken(qrToken: String): Result<Unit> = delegate().scanQrToken(qrToken)
+
+    override suspend fun confirmQrLogin(qrToken: String): Result<Unit> = delegate().confirmQrLogin(qrToken)
+
     override suspend fun logout() {
         delegate().logout()
         isLoggedIn.value = false

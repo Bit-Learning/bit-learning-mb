@@ -40,11 +40,14 @@ object Routes {
     const val SUPPORT = "support"
     const val NOTIFICATION_SETTING = "notification_setting"
     const val PAYMENT_SETTING = "payment_setting"
+    const val QR_SCANNER = "qr_scanner"
+    const val QR_CONFIRM = "qr_confirm/{qrToken}"
     const val COURSE_DETAIL = "course_detail/{courseId}"
     const val PLAYER = "player/{courseId}"
 
     fun courseDetail(courseId: String) = "course_detail/$courseId"
     fun player(courseId: String) = "player/$courseId"
+    fun qrConfirm(qrToken: String) = "qr_confirm/$qrToken"
 }
 
 @Composable
@@ -94,6 +97,9 @@ fun BitLearningNavGraph(navController: NavHostController) {
                 },
                 onNavigateToNotification = {
                     navController.navigate(Routes.NOTIFICATION)
+                },
+                onNavigateToQrLogin = {
+                    navController.navigate(Routes.QR_SCANNER)
                 },
             )
         }
@@ -223,6 +229,23 @@ fun BitLearningNavGraph(navController: NavHostController) {
         composable(Routes.PAYMENT_SETTING) {
             PaymentSettingScreen(
                 onNavigateBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.QR_SCANNER) {
+            com.app.bitlearning.features.auth.ui.QrScannerScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onTokenScanned = { token ->
+                    navController.navigate(Routes.qrConfirm(token))
+                }
+            )
+        }
+
+        composable(Routes.QR_CONFIRM) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("qrToken") ?: return@composable
+            com.app.bitlearning.features.auth.ui.QrLoginConfirmScreen(
+                qrToken = token,
+                onDone = { navController.popBackStack(Routes.HOME, false) },
             )
         }
 

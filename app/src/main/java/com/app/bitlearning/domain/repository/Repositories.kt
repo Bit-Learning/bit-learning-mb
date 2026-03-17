@@ -33,6 +33,19 @@ interface AuthRepository {
      */
     suspend fun loginWithGitHub(code: String): Result<AuthToken>
 
+    /**
+     * QR web login: mark the QR session as scanned by this authenticated user.
+     * Mobile calls this after successfully reading the QR code from the web
+     * login screen.
+     */
+    suspend fun scanQrToken(qrToken: String): Result<Unit>
+
+    /**
+     * QR web login: confirm and approve the pending web login for [qrToken].
+     * Backend will generate a JWT for the web client and complete the flow.
+     */
+    suspend fun confirmQrLogin(qrToken: String): Result<Unit>
+
     suspend fun logout()
     suspend fun getCurrentUser(): User?
     fun isLoggedIn(): Flow<Boolean>

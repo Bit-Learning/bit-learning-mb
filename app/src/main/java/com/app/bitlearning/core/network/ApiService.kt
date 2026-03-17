@@ -33,6 +33,30 @@ interface BitLearningApiService {
     @POST("auth/logout")
     suspend fun logout()
 
+
+    // ─── QR Web Login (Mobile as Authenticator) ────────────────────────────
+
+    /**
+     * Mobile confirms that a QR code displayed on the web app has been scanned.
+     *
+     * POST /auth/qr/scan { qrToken }
+     * Requires an authenticated mobile user (Authorization header is added by
+     * [AuthInterceptor]). Backend will update the Redis QR session to
+     * SCANNED and push an SSE event to the web client.
+     */
+    @POST("auth/qr/scan")
+    suspend fun scanQr(@Body body: QrTokenBody)
+
+    /**
+     * Mobile approves the web login for the given QR token.
+     *
+     * POST /auth/qr/confirm { qrToken }
+     * Requires an authenticated mobile user. Backend will generate a JWT for
+     * the web client and complete the QR login flow.
+     */
+    @POST("auth/qr/confirm")
+    suspend fun confirmQr(@Body body: QrTokenBody)
+
     // ─── OAuth2 ─────────────────────────────────────────────────────────────
 
     /**
@@ -132,6 +156,11 @@ data class RegisterBody(
     val lastName: String,
     val email: String,
     val password: String,
+)
+
+/** Simple body used by /auth/qr/scan and /auth/qr/confirm */
+data class QrTokenBody(
+    val qrToken: String,
 )
 
 data class UpdateProfileBody(

@@ -11,6 +11,7 @@ import com.app.bitlearning.core.network.BitLearningApiService
 import com.app.bitlearning.core.network.GoogleIdTokenBody
 import com.app.bitlearning.core.network.LoginBody
 import com.app.bitlearning.core.network.OAuth2LoginBody
+import com.app.bitlearning.core.network.QrTokenBody
 import com.app.bitlearning.core.network.RegisterBody
 import com.app.bitlearning.core.preferences.AppPreferences
 import com.app.bitlearning.domain.model.AuthToken
@@ -135,6 +136,20 @@ constructor(
                 OAuth2LoginBody(code = code, redirectUri = "https://bit-learning.lch.id.vn/auth/github/callback"),
             )
         handleOAuth2Response(wrapper.data, wrapper.message)
+    }
+
+    // ── QR Web Login (mobile as authenticator) ─────────────────────────────
+
+    override suspend fun scanQrToken(qrToken: String): Result<Unit> = runCatching {
+        log.d(TAG, "POST /auth/qr/scan — qrToken=$qrToken")
+        api.scanQr(QrTokenBody(qrToken))
+        Unit
+    }
+
+    override suspend fun confirmQrLogin(qrToken: String): Result<Unit> = runCatching {
+        log.d(TAG, "POST /auth/qr/confirm — qrToken=$qrToken")
+        api.confirmQr(QrTokenBody(qrToken))
+        Unit
     }
 
     // ── Session ─────────────────────────────────────────────────────────

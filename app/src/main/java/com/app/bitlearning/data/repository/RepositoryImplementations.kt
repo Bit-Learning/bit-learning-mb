@@ -75,6 +75,18 @@ class MockAuthRepositoryImpl @Inject constructor() : AuthRepository {
         )
     }
 
+    override suspend fun scanQrToken(qrToken: String): Result<Unit> {
+        // In mock mode just simulate a short delay and succeed.
+        delay(500)
+        return Result.success(Unit)
+    }
+
+    override suspend fun confirmQrLogin(qrToken: String): Result<Unit> {
+        // Mock confirmation: no-op with small delay.
+        delay(500)
+        return Result.success(Unit)
+    }
+
     override suspend fun logout() {
         isLoggedInState.value = false
     }
