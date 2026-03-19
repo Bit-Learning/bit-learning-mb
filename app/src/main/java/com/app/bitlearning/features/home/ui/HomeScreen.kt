@@ -38,6 +38,7 @@ fun HomeScreen(
     onNavigateToCourses: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToNotification: () -> Unit = {},
+    onLaunchPythonCompiler: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
     profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -59,6 +60,7 @@ fun HomeScreen(
                         "search" -> onNavigateToSearch()
                     }
                 },
+                onLaunchPythonCompiler = onLaunchPythonCompiler,
             )
         },
     ) { padding ->

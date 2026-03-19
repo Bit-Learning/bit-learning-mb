@@ -13,6 +13,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import com.app.bitlearning.core.common.theme.BitLearningTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,9 +34,24 @@ class MainActivity : ComponentActivity() {
         setContent {
             BitLearningTheme {
                 val navController = rememberNavController()
+                
+                // Python compiler launcher
+                val launchPythonCompiler: () -> Unit = {
+                    try {
+                        val intent = Intent(
+                            this@MainActivity,
+                            Class.forName("github.psicodes.ktxpy.activities.HomeActivity")
+                        )
+                        startActivity(intent)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                
                 BitLearningNavGraph(
                     navController = navController,
                     deepLinkUri = deepLinkUri.value,
+                    onLaunchPythonCompiler = launchPythonCompiler,
                 )
             }
         }

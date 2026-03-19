@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
@@ -461,10 +462,12 @@ fun BLTextField(
 fun BLBottomNavBar(
     currentRoute: String,
     onNavigate: (String) -> Unit,
+    onLaunchPythonCompiler: () -> Unit = {},
 ) {
     val items = listOf(
         BottomNavItem("home", "Trang chủ", androidx.compose.material.icons.Icons.Filled.Home),
         BottomNavItem("search", "Tìm kiếm", androidx.compose.material.icons.Icons.Filled.Search),
+        BottomNavItem("python", "Python", androidx.compose.material.icons.Icons.Filled.Computer),
         BottomNavItem("courses", "Khóa học", androidx.compose.material.icons.Icons.Filled.MenuBook),
         BottomNavItem("profile", "Hồ sơ", androidx.compose.material.icons.Icons.Filled.Person),
     )
@@ -475,7 +478,13 @@ fun BLBottomNavBar(
         items.forEach { item ->
             NavigationBarItem(
                 selected = currentRoute == item.route,
-                onClick = { onNavigate(item.route) },
+                onClick = {
+                    if (item.route == "python") {
+                        onLaunchPythonCompiler()
+                    } else {
+                        onNavigate(item.route)
+                    }
+                },
                 icon = {
                     Icon(imageVector = item.icon, contentDescription = item.label)
                 },

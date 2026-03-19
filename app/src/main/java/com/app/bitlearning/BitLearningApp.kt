@@ -8,6 +8,39 @@ package com.app.bitlearning
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
+import timber.log.Timber
+import java.io.File
 
 @HiltAndroidApp
-class BitLearningApp : Application()
+class BitLearningApp : Application() {
+    
+    override fun onCreate() {
+        super.onCreate()
+        
+        // Initialize Python runtime components
+        initializePythonRuntime()
+    }
+    
+    private fun initializePythonRuntime() {
+        try {
+            // Initialize crash handler for Python module
+            github.psicodes.ktxpy.utils.CrashHandler.INSTANCE.init(this)
+            
+            // Initialize Timber for logging
+            if (timber.log.Timber.forest().isEmpty()) {
+                Timber.plant(Timber.DebugTree())
+            }
+            
+            // Create Python files directory
+            val pythonFilesDir = File(filesDir.absolutePath + "/pythonFiles")
+            if (!pythonFilesDir.exists()) {
+                pythonFilesDir.mkdir()
+            }
+            github.psicodes.ktxpy.utils.PythonFileManager.filesDir = pythonFilesDir.absolutePath
+            github.psicodes.ktxpy.utils.PythonFileManager.init()
+            
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+}

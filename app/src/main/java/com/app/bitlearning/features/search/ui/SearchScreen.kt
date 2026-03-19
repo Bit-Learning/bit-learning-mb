@@ -40,6 +40,7 @@ fun SearchScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToCourses: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onLaunchPythonCompiler: () -> Unit = {},
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -57,6 +58,7 @@ fun SearchScreen(
                         "search" -> Unit
                     }
                 },
+                onLaunchPythonCompiler = onLaunchPythonCompiler,
             )
         },
     ) { padding ->

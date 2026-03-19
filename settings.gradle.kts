@@ -17,9 +17,12 @@ dependencyResolutionManagement {
   repositories {
     google()
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
   }
 }
 
 rootProject.name = "bitlearning"
 
 include(":app")
+include(":ktxpy-module:app")
+include(":ktxpy-module:libp7zip")

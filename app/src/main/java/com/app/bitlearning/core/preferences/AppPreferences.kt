@@ -50,7 +50,7 @@ constructor(
     val useMock: Flow<Boolean> =
         dataStore.data
             .catch { emit(emptyPreferences()) }
-            .map { it[USE_MOCK_KEY] ?: false }
+            .map { it[USE_MOCK_KEY] ?: true }
 
     val accessToken: Flow<String?> =
         dataStore.data

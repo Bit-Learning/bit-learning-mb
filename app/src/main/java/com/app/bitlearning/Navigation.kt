@@ -53,6 +53,7 @@ object Routes {
 fun BitLearningNavGraph(
     navController: NavHostController,
     deepLinkUri: Uri? = null,
+    onLaunchPythonCompiler: () -> Unit = {},
 ) {
     // Handle incoming App Link deep link URI.
     // Fires whenever deepLinkUri changes (cold-start or onNewIntent hot-start).
@@ -122,6 +123,7 @@ fun BitLearningNavGraph(
                 onNavigateToNotification = {
                     navController.navigate(Routes.NOTIFICATION)
                 },
+                onLaunchPythonCompiler = onLaunchPythonCompiler,
             )
         }
 
@@ -142,6 +144,7 @@ fun BitLearningNavGraph(
                 onNavigateToNotification = {
                     navController.navigate(Routes.NOTIFICATION)
                 },
+                onLaunchPythonCompiler = onLaunchPythonCompiler,
             )
         }
 
@@ -159,6 +162,7 @@ fun BitLearningNavGraph(
                 onNavigateToProfile = {
                     navController.navigate(Routes.PROFILE)
                 },
+                onLaunchPythonCompiler = onLaunchPythonCompiler,
             )
         }
 
