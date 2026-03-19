@@ -12,4 +12,18 @@
         <item name="windowSplashScreenBackground">#FFF</item>
         <item name="postSplashScreenTheme">@style/Theme.BitLearning</item>
     </style>
+
+    <!-- Python Compiler Themes -->
+    <style name="Theme.PythonKTX" parent="android:Theme.Material.Light.NoActionBar" />
+    
+    <style name="AppTheme" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#6750A4</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#EADDFF</item>
+        <item name="colorOnPrimaryContainer">#21005D</item>
+        <item name="android:colorBackground">#1C1B1F</item>
+        <item name="colorOnBackground">#E6E1E5</item>
+        <item name="colorSurface">#1C1B1F</item>
+        <item name="colorOnSurface">#E6E1E5</item>
+    </style>
 </resources>

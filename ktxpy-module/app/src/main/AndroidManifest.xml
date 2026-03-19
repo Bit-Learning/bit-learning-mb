@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="github.psicodes.ktxpy"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <application android:requestLegacyExternalStorage="true">
+        <activity
+            android:name="github.psicodes.ktxpy.activities.TermActivity"
+            android:theme="@style/Theme.PythonKTX"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            />
+        <activity
+            android:name="github.psicodes.ktxpy.activities.HomeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PythonKTX"
+            android:label="Python Compiler" />
+        <activity
+            android:name="github.psicodes.ktxpy.activities.EditorActivity"
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+    </application>
+
+</manifest>

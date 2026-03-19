@@ -55,6 +55,14 @@ android {
         }
 
         manifestPlaceholders["appAuthRedirectScheme"] = "" // no longer used
+        
+        // Handle ktxpy module's cpuArch flavor dimension
+        missingDimensionStrategy("cpuArch", "arch_arm64")
+        
+        // Ensure native libraries are included
+        ndk {
+            abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64"))
+        }
     }
 
     signingConfigs {
@@ -181,6 +189,19 @@ dependencies {
     implementation(libs.androidx.browser)
     implementation(libs.androidx.animation)
     implementation(libs.stripe.android.v2250)
+
+    // KtxPy Python Compiler Dependencies
+    implementation(project(":ktxpy-module:app"))
+    implementation(project(":ktxpy-module:libp7zip"))
+    implementation("io.github.Rosemoe.sora-editor:editor")
+    implementation(platform("io.github.Rosemoe.sora-editor:bom:0.22.1"))
+    implementation("io.github.Rosemoe.sora-editor:language-textmate")
+    implementation("com.github.termux.termux-app:terminal-view:v0.118.0")
+    implementation("com.github.termux.termux-app:terminal-emulator:v0.118.0")
+    implementation("io.github.raamcosta.compose-destinations:animations-core:1.9.54")
+    ksp("io.github.raamcosta.compose-destinations:ksp:1.9.54")
+    implementation("com.blankj:utilcodex:1.31.1")
+    implementation("com.jakewharton.timber:timber:5.0.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
