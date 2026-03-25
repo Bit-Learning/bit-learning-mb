@@ -33,7 +33,7 @@ import com.app.bitlearning.features.profile.ui.ProfileViewModel
 
 @Composable
 fun HomeScreen(
-    onNavigateToCourse: (String) -> Unit,
+    onNavigateToCourse: (Int) -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToCourses: () -> Unit,
     onNavigateToSearch: () -> Unit,
@@ -312,7 +312,7 @@ private fun ContinueLearningCard(
 @Composable
 private fun RecommendedCoursesGrid(
     courses: List<Course>,
-    onCourseClick: (String) -> Unit,
+    onCourseClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {

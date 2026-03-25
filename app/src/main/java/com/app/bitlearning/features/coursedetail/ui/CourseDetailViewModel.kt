@@ -10,7 +10,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.bitlearning.domain.model.Course
-import com.app.bitlearning.domain.model.Lesson
+import com.app.bitlearning.domain.model.Lecture
 import com.app.bitlearning.features.coursedetail.domain.GetCourseDetailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 data class CourseDetailUiState(
     val course: Course? = null,
-    val lessons: List<Lesson> = emptyList(),
+    val lessons: List<Lecture> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null,
 )
@@ -32,7 +32,7 @@ class CourseDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val courseId: String = savedStateHandle.get<String>("courseId") ?: ""
+    private val courseId: Int = savedStateHandle.get<String>("courseId")?.toIntOrNull() ?: 0
     private val _uiState = MutableStateFlow(CourseDetailUiState())
     val uiState: StateFlow<CourseDetailUiState> = _uiState
 

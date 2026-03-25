@@ -36,10 +36,11 @@ import com.app.bitlearning.core.common.components.BLLoadingIndicator
 import com.app.bitlearning.core.common.theme.*
 import com.app.bitlearning.domain.model.Course
 import com.app.bitlearning.domain.model.CourseCategory
+import androidx.core.graphics.toColorInt
 
 @Composable
 fun CoursesScreen(
-    onNavigateToCourse: (String) -> Unit,
+    onNavigateToCourse: (Int) -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToSearch: () -> Unit,
@@ -235,7 +236,7 @@ private fun CourseListCard(
     course: Course,
     onClick: () -> Unit,
 ) {
-    val categoryColor = Color(android.graphics.Color.parseColor(course.category.colorHex))
+    val categoryColor = Color(course.category.colorHex.toColorInt())
 
     Card(
         modifier = Modifier
@@ -330,7 +331,7 @@ private fun CourseListCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "${course.lessonCount} bài học",
+                        text = "${course.totalLectures} bài học",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = Primary,
                             fontWeight = FontWeight.SemiBold,

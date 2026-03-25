@@ -45,7 +45,7 @@ class HomeViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             val user = authRepository.getCurrentUser()
             val enrolled = courseRepository.getEnrolledCourses().getOrElse { emptyList() }
-            val recommended = courseRepository.getRecommendedCourses().getOrElse { emptyList() }
+            val recommended = courseRepository.getCourses().getOrElse { emptyList() }
             _uiState.update {
                 it.copy(
                     user = user,

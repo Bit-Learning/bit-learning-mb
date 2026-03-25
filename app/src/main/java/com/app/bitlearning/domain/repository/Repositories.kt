@@ -11,44 +11,26 @@ import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
     suspend fun login(request: LoginRequest): Result<AuthToken>
-
-    /**
-     * Real API: returns [Result.success] with a success message.
-     * Mock: auto-signs in (returns success and sets authSuccess).
-     */
     suspend fun register(request: RegisterRequest): Result<Unit>
-
-    /**
-     * Mobile flow: verify a Google ID Token issued by the Google Sign-In SDK.
-     * The [idToken] is obtained from [GoogleSignInAccount.getIdToken()] on the device
-     * and sent to `POST /auth/oauth2/google/mobile` on the backend, which verifies it
-     * with Google and returns system JWTs.
-     * No redirect URI is involved.
-     */
     suspend fun loginWithGoogle(idToken: String): Result<AuthToken>
-
-    /**
-     * GitHub OAuth2 login via authorization-code flow.
-     * [code] is the authorization code from the GitHub browser flow.
-     */
     suspend fun loginWithGitHub(code: String): Result<AuthToken>
-
     suspend fun logout()
     suspend fun getCurrentUser(): User?
     fun isLoggedIn(): Flow<Boolean>
 }
 
 interface CourseRepository {
-    suspend fun getCourses(): Result<List<Course>>
-    suspend fun getCourseById(id: String): Result<Course>
-    suspend fun getEnrolledCourses(): Result<List<Course>>
-    suspend fun getRecommendedCourses(): Result<List<Course>>
+    suspend fun getCourses(page: Int = 0, size: Int = 10): Result<List<Course>>
+    suspend fun getCourseById(id: Int): Result<Course>
+    suspend fun getCoursesByGrade(grade: Int, page: Int = 0, size: Int = 10): Result<List<Course>>
+    suspend fun getEnrolledCourses(page: Int = 0, size: Int = 10): Result<List<Course>>
+    suspend fun getMyCourses(page: Int = 0, size: Int = 10): Result<List<Course>>
     suspend fun searchCourses(query: String): Result<List<Course>>
 }
 
 interface LessonRepository {
-    suspend fun getLessonsForCourse(courseId: String): Result<List<Lesson>>
-    suspend fun markLessonCompleted(lessonId: String): Result<Unit>
+    suspend fun getLessonsForCourse(courseId: Int): Result<List<Lecture>>
+    suspend fun markLectureCompleted(lectureId: Int): Result<Unit>
 }
 
 interface UserRepository {

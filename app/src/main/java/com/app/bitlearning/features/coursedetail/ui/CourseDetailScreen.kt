@@ -11,7 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -30,13 +29,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.app.bitlearning.core.common.components.*
 import com.app.bitlearning.core.common.theme.*
-import com.app.bitlearning.domain.model.Lesson
+import com.app.bitlearning.domain.model.Lecture
 
 @Composable
 fun CourseDetailScreen(
-    courseId: String,
+    courseId: Int,
     onNavigateBack: () -> Unit,
-    onStartLesson: (String) -> Unit,
+    onStartLesson: (Int) -> Unit,
     viewModel: CourseDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -95,7 +94,7 @@ fun CourseDetailScreen(
                         modifier = Modifier.padding(20.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        BLCategoryChip(label = course.category.displayName)
+                        BLCategoryChip(label = course.level.displayName)
                         Text(
                             text = course.title,
                             style = MaterialTheme.typography.headlineLarge,
@@ -111,11 +110,11 @@ fun CourseDetailScreen(
                             BLRatingRow(rating = course.rating, reviewCount = course.reviewCount)
                             CourseInfoChip(
                                 icon = Icons.Filled.PlayCircle,
-                                text = "${course.lessonCount} bài",
+                                text = "${course.totalLectures} bài",
                             )
                             CourseInfoChip(
                                 icon = Icons.Filled.AccessTime,
-                                text = course.duration,
+                                text = formatTotalDuration(course.totalDuration),
                             )
                         }
                         if (course.progress > 0f) {
@@ -165,11 +164,11 @@ fun CourseDetailScreen(
 
                 // Tab content - Lessons
                 if (selectedTab == 0) {
-                    items(uiState.lessons) { lesson ->
-                        LessonItem(
-                            lesson = lesson,
+                    items(uiState.lessons) { lecture ->
+                        LectureItem(
+                            lecture = lecture,
                             onClick = {
-                                if (!lesson.isLocked) onStartLesson(courseId)
+                                if (!lecture.isLocked) onStartLesson(courseId)
                             },
                         )
                         BLDivider(Modifier.padding(horizontal = 16.dp))
@@ -193,45 +192,44 @@ fun CourseDetailScreen(
     }
 }
 
+
 // ─────────────────────────────────────────────
-//  Lesson List Item
+//  Lecture List Item
 // ─────────────────────────────────────────────
 @Composable
-private fun LessonItem(
-    lesson: Lesson,
+private fun LectureItem(
+    lecture: Lecture,
     onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = !lesson.isLocked) { onClick() }
+            .clickable(enabled = !lecture.isLocked) { onClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        // Play/Complete button
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(
                     when {
-                        lesson.isCompleted -> PrimaryContainer
-                        lesson.isCurrentlyPlaying -> Primary
-                        lesson.isLocked -> SurfaceVariant
+                        lecture.isCompleted -> PrimaryContainer
+                        lecture.isLocked -> SurfaceVariant
                         else -> SurfaceVariant
                     },
                 ),
             contentAlignment = Alignment.Center,
         ) {
             when {
-                lesson.isCompleted -> Icon(
+                lecture.isCompleted -> Icon(
                     Icons.Filled.CheckCircle,
                     null,
                     tint = Primary,
                     modifier = Modifier.size(20.dp),
                 )
-                lesson.isLocked -> Icon(
+                lecture.isLocked -> Icon(
                     Icons.Filled.Lock,
                     null,
                     tint = OnSurfaceMuted,
@@ -240,49 +238,24 @@ private fun LessonItem(
                 else -> Icon(
                     Icons.Filled.PlayArrow,
                     null,
-                    tint = if (lesson.isCurrentlyPlaying) OnPrimary else OnSurfaceVariant,
+                    tint = OnSurfaceVariant,
                     modifier = Modifier.size(20.dp),
                 )
             }
         }
 
-        // Title and duration
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "${lesson.order.toString().padStart(2, '0')}. ${lesson.title}",
+                text = "${lecture.orderIndex.toString().padStart(2, '0')}. ${lecture.title}",
                 style = MaterialTheme.typography.titleSmall.copy(
-                    color = if (lesson.isLocked) OnSurfaceMuted else OnSurface,
-                    textDecoration = if (lesson.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                    color = if (lecture.isLocked) OnSurfaceMuted else OnSurface,
+                    textDecoration = if (lecture.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
                 ),
             )
             Spacer(Modifier.height(2.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = formatDuration(lesson.durationSeconds),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = if (lesson.isCurrentlyPlaying) Primary else OnSurfaceMuted,
-                        fontWeight = if (lesson.isCurrentlyPlaying) FontWeight.SemiBold else FontWeight.Normal,
-                    ),
-                )
-                if (lesson.isCurrentlyPlaying) {
-                    Text(
-                        text = "• Đang phát",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = Primary,
-                            fontWeight = FontWeight.SemiBold,
-                        ),
-                    )
-                }
-            }
-        }
-
-        // Dot indicator for currently playing
-        if (lesson.isCurrentlyPlaying) {
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(Primary),
+            Text(
+                text = lecture.type.name,
+                style = MaterialTheme.typography.bodySmall.copy(color = OnSurfaceMuted),
             )
         }
     }
@@ -320,9 +293,6 @@ private fun CourseDetailTopBar(
     )
 }
 
-// ─────────────────────────────────────────────
-//  Course Info Chip
-// ─────────────────────────────────────────────
 @Composable
 private fun CourseInfoChip(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -337,13 +307,12 @@ private fun CourseInfoChip(
     }
 }
 
-private fun formatDuration(seconds: Int): String {
-    val m = seconds / 60
-    val s = seconds % 60
-    return "${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}"
+private fun formatTotalDuration(totalSeconds: Int): String {
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
 }
 
-// Extension needed for Tab indicator
 private fun Modifier.tabIndicatorOffset(tabPosition: androidx.compose.material3.TabPosition): Modifier = this.then(
     Modifier.fillMaxWidth(1f / 3)
         .wrapContentSize(Alignment.BottomStart)

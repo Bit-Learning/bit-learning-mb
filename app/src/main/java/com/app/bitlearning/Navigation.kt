@@ -45,8 +45,8 @@ object Routes {
     const val COURSE_DETAIL = "course_detail/{courseId}"
     const val PLAYER = "player/{courseId}"
 
-    fun courseDetail(courseId: String) = "course_detail/$courseId"
-    fun player(courseId: String) = "player/$courseId"
+    fun courseDetail(courseId: Int) = "course_detail/$courseId"
+    fun player(courseId: Int) = "player/$courseId"
 }
 
 @Composable
@@ -62,7 +62,7 @@ fun BitLearningNavGraph(
     LaunchedEffect(deepLinkUri) {
         deepLinkUri ?: return@LaunchedEffect
         val screen = deepLinkUri.getQueryParameter("screen")
-        val id = deepLinkUri.getQueryParameter("id")
+        val id = deepLinkUri.getQueryParameter("id")?.toInt()
         when (screen) {
             "course" -> {
                 if (id != null) {
@@ -258,7 +258,7 @@ fun BitLearningNavGraph(
 //        }
 
         composable(Routes.COURSE_DETAIL) { backStack ->
-            val courseId = backStack.arguments?.getString("courseId") ?: return@composable
+            val courseId = backStack.arguments?.getString("courseId")?.toIntOrNull() ?: return@composable
             CourseDetailScreen(
                 courseId = courseId,
                 onNavigateBack = { navController.popBackStack() },

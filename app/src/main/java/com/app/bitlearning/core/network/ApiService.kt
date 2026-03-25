@@ -68,26 +68,44 @@ interface BitLearningApiService {
 
     @GET("courses")
     suspend fun getCourses(
-        @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 20,
-    ): ApiWrapper<List<CourseDto>>
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 10,
+    ): ApiWrapper<List<CoursePreviewDto>>
 
     @GET("courses/{id}")
-    suspend fun getCourseById(@Path("id") id: String): ApiWrapper<CourseDto>
+    suspend fun getCourseById(@Path("id") id: Int): ApiWrapper<CourseDetailDto>
 
-    @GET("courses/recommended")
-    suspend fun getRecommendedCourses(): ApiWrapper<List<CourseDto>>
+    @GET("courses/grade/{grade}")
+    suspend fun getCoursesByGrade(
+        @Path("grade") grade: Int,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 10,
+    ): ApiWrapper<List<CoursePreviewDto>>
 
-    @GET("users/me/courses")
-    suspend fun getEnrolledCourses(): ApiWrapper<List<CourseDto>>
+    @GET("courses/my-courses")
+    suspend fun getMyCourses(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 10,
+    ): ApiWrapper<List<MyCourseDto>>
 
-    // ─── Lessons ────────────────────────────────────────────────────────────
+    // ─── Enrollment ─────────────────────────────────────────────────────────
 
-    @GET("courses/{courseId}/lessons")
-    suspend fun getLessons(@Path("courseId") courseId: String): ApiWrapper<List<LessonDto>>
+    @GET("enrollments/my-courses")
+    suspend fun getEnrolledCourses(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 10,
+    ): ApiWrapper<List<EnrollmentDto>>
 
-    @POST("lessons/{lessonId}/complete")
-    suspend fun markLessonCompleted(@Path("lessonId") lessonId: String)
+    @POST("enrollments/enroll/{courseId}")
+    suspend fun enrollCourse(@Path("courseId") courseId: Int): ApiWrapper<Unit>
+
+    @GET("enrollments/courses/{courseId}/access")
+    suspend fun checkCourseAccess(@Path("courseId") courseId: Int): ApiWrapper<Boolean>
+
+    // ─── Learning ───────────────────────────────────────────────────────────
+
+    @POST("learning/progress/lectures/{lectureId}/complete")
+    suspend fun markLectureCompleted(@Path("lectureId") lectureId: Int): ApiWrapper<Unit>
 
     // ─── User ───────────────────────────────────────────────────────────────
 
@@ -111,7 +129,17 @@ data class ApiWrapper<T>(
     val status: Int = 0,
     val message: String? = null,
     val data: T? = null,
+    val page: PageInfoDto? = null,
     val error: String? = null,
+)
+
+data class PageInfoDto(
+    val page: Int = 0,
+    val size: Int = 0,
+    val totalElements: Long = 0,
+    val totalPages: Int = 0,
+    val first: Boolean = true,
+    val last: Boolean = true,
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -198,36 +226,106 @@ data class UserApiDto(
     val createdAt: String? = null,
 )
 
-data class CourseDto(
-    val id: String,
-    val title: String,
-    val description: String,
-    val instructor: String,
+// ─── Course DTOs (matching backend CourseDto.java) ──────────────────────
+
+data class CoursePreviewDto(
+    val id: Int,
+    val code: String?,
+    val title: String?,
+    val description: String?,
     val thumbnailUrl: String?,
-    val category: String,
-    val rating: Double,
-    val reviewCount: Int,
-    val duration: String,
-    val lessonCount: Int,
-    val progress: Float,
+    val instructorId: Int?,
+    val instructorName: String?,
+    val ratingStar: Double?,
+    val ratingCount: Int?,
+    val level: String?,
+    val grade: Int?,
+    val price: Int?,
+    val isDeleted: Boolean?,
+    val status: String?,
 )
 
-data class LessonDto(
-    val id: String,
-    val courseId: String,
-    val order: Int,
-    val title: String,
-    val durationSeconds: Int,
-    val videoUrl: String?,
-    val isCompleted: Boolean,
-    val isLocked: Boolean,
+data class CourseDetailDto(
+    val id: Int,
+    val code: String?,
+    val title: String?,
+    val instructorId: Int?,
+    val instructorName: String?,
+    val subtitle: String?,
+    val thumbnailUrl: String?,
+    val language: String?,
+    val outcome: String?,
+    val requirement: String?,
+    val audience: String?,
+    val level: String?,
+    val description: String?,
+    val ratingStar: Double?,
+    val ratingCount: Int?,
+    val totalSections: Int?,
+    val totalLectures: Int?,
+    val totalDuration: Int?,
+    val grade: Int?,
+    val price: Int?,
+    val sections: List<SectionDetailDto>?,
+    val isDeleted: Boolean?,
+    val status: String?,
+    val progressPercentage: Float?,
 )
 
-data class UserDto(
-    val id: String,
-    val name: String,
-    val email: String,
-    val avatarUrl: String?,
-    val memberSince: Int,
-    val isPremium: Boolean,
+data class MyCourseDto(
+    val id: Int,
+    val code: String?,
+    val title: String?,
+    val description: String?,
+    val thumbnailUrl: String?,
+    val instructorId: Int?,
+    val instructorName: String?,
+    val ratingStar: Double?,
+    val ratingCount: Int?,
+    val level: String?,
+    val grade: Int?,
+    val price: Int?,
+    val isDeleted: Boolean?,
+    val status: String?,
+    val progressPercentage: Float?,
+)
+
+data class SectionDetailDto(
+    val id: Int?,
+    val title: String?,
+    val description: String?,
+    val isPublished: Boolean?,
+    val orderIndex: Int?,
+    val totalLectures: Int?,
+    val totalDuration: Int?,
+    val isDeleted: Boolean?,
+    val lectures: List<LectureDetailDto>?,
+    val progressPercentage: Float?,
+)
+
+data class LectureDetailDto(
+    val id: Int?,
+    val sectionId: Int?,
+    val title: String?,
+    val description: String?,
+    val type: String?,
+    val isPreviewable: Boolean?,
+    val orderIndex: Int?,
+    val isDeleted: Boolean?,
+    val isCompleted: Boolean?,
+)
+
+data class EnrollmentDto(
+    val enrollmentId: Int?,
+    val progressPercentage: Float?,
+    val isCompleted: Boolean?,
+    val courseId: Int?,
+    val courseCode: String?,
+    val courseTitle: String?,
+    val courseThumbnailUrl: String?,
+    val instructorName: String?,
+    val instructorId: Int?,
+    val level: String?,
+    val grade: Int?,
+    val createdAt: String?,
 )
