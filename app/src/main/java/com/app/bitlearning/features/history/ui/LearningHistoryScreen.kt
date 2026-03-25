@@ -46,7 +46,7 @@ import com.app.bitlearning.domain.model.Course
 @Composable
 fun LearningHistoryScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToCourse: (String) -> Unit,
+    onNavigateToCourse: (Int) -> Unit,
     onNavigateToCertificates: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToCourses: () -> Unit,

@@ -7,21 +7,21 @@
 package com.app.bitlearning.features.coursedetail.domain
 
 import com.app.bitlearning.domain.model.Course
-import com.app.bitlearning.domain.model.Lesson
+import com.app.bitlearning.domain.model.Lecture
 import com.app.bitlearning.domain.repository.CourseRepository
 import com.app.bitlearning.domain.repository.LessonRepository
 import javax.inject.Inject
 
 data class CourseDetailData(
     val course: Course,
-    val lessons: List<Lesson>,
+    val lessons: List<Lecture>,
 )
 
 class GetCourseDetailUseCase @Inject constructor(
     private val courseRepository: CourseRepository,
     private val lessonRepository: LessonRepository,
 ) {
-    suspend operator fun invoke(courseId: String): Result<CourseDetailData> {
+    suspend operator fun invoke(courseId: Int): Result<CourseDetailData> {
         val courseResult = courseRepository.getCourseById(courseId)
         val course = courseResult.getOrElse { return Result.failure(it) }
         val lessons = lessonRepository.getLessonsForCourse(courseId).getOrElse { emptyList() }

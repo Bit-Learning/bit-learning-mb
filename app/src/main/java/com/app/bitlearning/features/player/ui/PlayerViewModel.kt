@@ -10,7 +10,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.bitlearning.domain.model.Course
-import com.app.bitlearning.domain.model.Lesson
+import com.app.bitlearning.domain.model.Lecture
 import com.app.bitlearning.domain.repository.CourseRepository
 import com.app.bitlearning.domain.repository.LessonRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,8 +22,8 @@ import kotlinx.coroutines.launch
 
 data class PlayerUiState(
     val course: Course? = null,
-    val lessons: List<Lesson> = emptyList(),
-    val currentLesson: Lesson? = null,
+    val lessons: List<Lecture> = emptyList(),
+    val currentLesson: Lecture? = null,
     val currentVideoUrl: String? = null,
     val isLoading: Boolean = true,
     val isAutoPlay: Boolean = true,
@@ -38,7 +38,7 @@ class PlayerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val courseId: String = savedStateHandle.get<String>("courseId") ?: ""
+    private val courseId: Int = savedStateHandle.get<String>("courseId")?.toIntOrNull() ?: 0
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState
 
@@ -50,25 +50,25 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch {
             val course = courseRepository.getCourseById(courseId).getOrNull()
             val lessons = lessonRepository.getLessonsForCourse(courseId).getOrElse { emptyList() }
-            val current = lessons.find { it.isCurrentlyPlaying } ?: lessons.firstOrNull()
+            val current = lessons.firstOrNull()
             _uiState.update {
                 it.copy(
                     course = course,
                     lessons = lessons,
                     currentLesson = current,
-                    currentVideoUrl = current?.videoUrl,
+                    currentVideoUrl = null,
                     isLoading = false,
                 )
             }
         }
     }
 
-    fun selectLesson(lesson: Lesson) {
+    fun selectLesson(lesson: Lecture) {
         if (lesson.isLocked) return
         _uiState.update {
             it.copy(
                 currentLesson = lesson,
-                currentVideoUrl = lesson.videoUrl,
+                currentVideoUrl = null, // video URL comes from lecture content API
             )
         }
     }
@@ -76,8 +76,7 @@ class PlayerViewModel @Inject constructor(
     fun markCurrentCompleted() {
         val currentId = _uiState.value.currentLesson?.id ?: return
         viewModelScope.launch {
-            lessonRepository.markLessonCompleted(currentId)
-            // Update local list
+            lessonRepository.markLectureCompleted(currentId)
             _uiState.update { state ->
                 state.copy(
                     lessons = state.lessons.map { lesson ->

@@ -36,7 +36,7 @@ import com.app.bitlearning.domain.model.Course
 
 @Composable
 fun SearchScreen(
-    onNavigateToCourse: (String) -> Unit,
+    onNavigateToCourse: (Int) -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToCourses: () -> Unit,
     onNavigateToProfile: () -> Unit,
@@ -469,7 +469,7 @@ private fun TrendingCourseRow(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "${course.lessonCount} bài học",
+                        text = "${course.totalLectures} bài học",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = Primary,
                             fontWeight = FontWeight.SemiBold,

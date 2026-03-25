@@ -25,7 +25,7 @@ class MockAuthRepositoryImpl @Inject constructor() : AuthRepository {
     private val isLoggedInState = MutableStateFlow(false)
 
     override suspend fun login(request: LoginRequest): Result<AuthToken> {
-        delay(1200) // Simulate network
+        delay(1200)
         return if (request.email.isNotBlank() && request.password.length >= 6) {
             isLoggedInState.value = true
             Result.success(
@@ -43,7 +43,6 @@ class MockAuthRepositoryImpl @Inject constructor() : AuthRepository {
     override suspend fun register(request: RegisterRequest): Result<Unit> {
         delay(1500)
         return if (request.email.contains("@") && request.password.length >= 6) {
-            // Mock auto-logs in after registration (no email activation step)
             isLoggedInState.value = true
             Result.success(Unit)
         } else {
@@ -79,67 +78,75 @@ class MockAuthRepositoryImpl @Inject constructor() : AuthRepository {
         isLoggedInState.value = false
     }
 
-    override suspend fun getCurrentUser(): User? = MockData.currentUser
+    override suspend fun getCurrentUser(): User? = null
 
     override fun isLoggedIn(): Flow<Boolean> = isLoggedInState
 }
 
+
 // ─────────────────────────────────────────────
-//  Course Repository Implementation (Mock)
+//  Course Repository Implementation (Real API)
 // ─────────────────────────────────────────────
 @Singleton
-class CourseRepositoryImpl @Inject constructor() : CourseRepository {
+class CourseRepositoryImpl @Inject constructor(
+    private val api: BitLearningApiService,
+) : CourseRepository {
 
-    override suspend fun getCourses(): Result<List<Course>> {
-        delay(800)
-        return Result.success(MockData.courses)
+    override suspend fun getCourses(page: Int, size: Int): Result<List<Course>> = runCatching {
+        val wrapper = api.getCourses(page = page, size = size)
+        wrapper.data?.map { it.toDomain() } ?: emptyList()
     }
 
-    override suspend fun getCourseById(id: String): Result<Course> {
-        delay(400)
-        val course = MockData.courses.find { it.id == id }
-        return if (course != null) {
-            Result.success(course)
-        } else {
-            Result.failure(Exception("Không tìm thấy khóa học"))
-        }
+    override suspend fun getCourseById(id: Int): Result<Course> = runCatching {
+        val wrapper = api.getCourseById(id)
+        wrapper.data?.toDomain() ?: error(wrapper.message ?: "Không tìm thấy khóa học")
     }
 
-    override suspend fun getEnrolledCourses(): Result<List<Course>> {
-        delay(600)
-        return Result.success(MockData.courses.filter { it.progress > 0f })
+    override suspend fun getCoursesByGrade(grade: Int, page: Int, size: Int): Result<List<Course>> = runCatching {
+        val wrapper = api.getCoursesByGrade(grade = grade, page = page, size = size)
+        wrapper.data?.map { it.toDomain() } ?: emptyList()
     }
 
-    override suspend fun getRecommendedCourses(): Result<List<Course>> {
-        delay(600)
-        return Result.success(MockData.courses.filter { it.progress == 0f })
+    override suspend fun getEnrolledCourses(page: Int, size: Int): Result<List<Course>> = runCatching {
+        val wrapper = api.getEnrolledCourses(page = page, size = size)
+        wrapper.data?.map { it.toDomain() } ?: emptyList()
     }
 
-    override suspend fun searchCourses(query: String): Result<List<Course>> {
-        delay(400)
-        return Result.success(
-            MockData.courses.filter {
-                it.title.contains(query, ignoreCase = true) ||
-                    it.instructor.contains(query, ignoreCase = true)
-            },
-        )
+    override suspend fun getMyCourses(page: Int, size: Int): Result<List<Course>> = runCatching {
+        val wrapper = api.getMyCourses(page = page, size = size)
+        wrapper.data?.map { it.toDomain() } ?: emptyList()
+    }
+
+    override suspend fun searchCourses(query: String): Result<List<Course>> = runCatching {
+        // Backend doesn't have a dedicated search endpoint yet; filter from all courses
+        val wrapper = api.getCourses(page = 0, size = 50)
+        wrapper.data?.map { it.toDomain() }?.filter {
+            it.title.contains(query, ignoreCase = true) ||
+                it.instructor.contains(query, ignoreCase = true)
+        } ?: emptyList()
     }
 }
 
 // ─────────────────────────────────────────────
-//  Lesson Repository Implementation (Mock)
+//  Lesson Repository Implementation (Real API)
 // ─────────────────────────────────────────────
 @Singleton
-class LessonRepositoryImpl @Inject constructor() : LessonRepository {
+class LessonRepositoryImpl @Inject constructor(
+    private val api: BitLearningApiService,
+) : LessonRepository {
 
-    override suspend fun getLessonsForCourse(courseId: String): Result<List<Lesson>> {
-        delay(500)
-        return Result.success(MockData.lessonsForUIBasics.filter { it.courseId == courseId })
+    override suspend fun getLessonsForCourse(courseId: Int): Result<List<Lecture>> = runCatching {
+        // Get course detail which includes sections → lectures
+        val wrapper = api.getCourseById(courseId)
+        val detail = wrapper.data ?: error(wrapper.message ?: "Không tìm thấy khóa học")
+        detail.sections?.flatMap { section ->
+            section.lectures?.map { it.toDomain() } ?: emptyList()
+        } ?: emptyList()
     }
 
-    override suspend fun markLessonCompleted(lessonId: String): Result<Unit> {
-        delay(300)
-        return Result.success(Unit)
+    override suspend fun markLectureCompleted(lectureId: Int): Result<Unit> = runCatching {
+        api.markLectureCompleted(lectureId)
+        Unit
     }
 }
 
@@ -168,5 +175,5 @@ class UserRepositoryImpl @Inject constructor(
         dto.toDomain()
     }
 
-    override suspend fun getCertificates(): Result<List<Certificate>> = Result.success(emptyList()) // TODO: wire up /users/certificates when backend is ready
+    override suspend fun getCertificates(): Result<List<Certificate>> = Result.success(emptyList())
 }

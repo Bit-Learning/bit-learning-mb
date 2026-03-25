@@ -29,7 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.app.bitlearning.core.common.components.*
 import com.app.bitlearning.core.common.theme.*
-import com.app.bitlearning.domain.model.Lesson
+import com.app.bitlearning.domain.model.Lecture
 import com.app.bitlearning.features.player.components.BLVideoPlayer
 
 @Composable
@@ -46,13 +46,11 @@ fun PlayerScreen(
             .fillMaxSize()
             .background(Background),
     ) {
-        // Top Bar
         PlayerTopBar(
             title = uiState.course?.title ?: "",
             onBack = onNavigateBack,
         )
 
-        // Video Player
         BLVideoPlayer(
             videoUrl = uiState.currentVideoUrl,
             modifier = Modifier
@@ -60,7 +58,6 @@ fun PlayerScreen(
                 .aspectRatio(16f / 9f),
         )
 
-        // Tab Row
         TabRow(
             selectedTabIndex = uiState.selectedTab,
             containerColor = Surface,
@@ -92,10 +89,8 @@ fun PlayerScreen(
             }
         }
 
-        // Tab Content
         when (uiState.selectedTab) {
             0 -> {
-                // Lessons List
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -143,7 +138,7 @@ fun PlayerScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 0.dp),
+                        .padding(horizontal = 16.dp),
                 ) {
                     BLProgressBar(
                         progress = uiState.course?.progress ?: 0f,
@@ -152,18 +147,17 @@ fun PlayerScreen(
                 }
 
                 LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(uiState.lessons) { lesson ->
-                        PlayerLessonItem(
-                            lesson = lesson,
-                            isCurrentLesson = lesson.id == uiState.currentLesson?.id,
-                            onClick = { viewModel.selectLesson(lesson) },
+                    items(uiState.lessons) { lecture ->
+                        PlayerLectureItem(
+                            lecture = lecture,
+                            isCurrentLecture = lecture.id == uiState.currentLesson?.id,
+                            onClick = { viewModel.selectLesson(lecture) },
                         )
                         BLDivider(Modifier.padding(horizontal = 16.dp))
                     }
                 }
             }
             1 -> {
-                // Description
                 Text(
                     text = uiState.course?.description ?: "",
                     style = MaterialTheme.typography.bodyLarge,
@@ -183,7 +177,6 @@ fun PlayerScreen(
             }
         }
 
-        // Mark Complete Button
         Box(modifier = Modifier.padding(16.dp)) {
             BLPrimaryButton(
                 text = "  Đánh dấu đã hoàn thành",
@@ -194,47 +187,44 @@ fun PlayerScreen(
     }
 }
 
-// ─────────────────────────────────────────────
-//  Player Lesson Item
-// ─────────────────────────────────────────────
+
 @Composable
-private fun PlayerLessonItem(
-    lesson: Lesson,
-    isCurrentLesson: Boolean,
+private fun PlayerLectureItem(
+    lecture: Lecture,
+    isCurrentLecture: Boolean,
     onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if (isCurrentLesson) PrimaryContainer.copy(alpha = 0.4f) else Background)
-            .clickable(enabled = !lesson.isLocked) { onClick() }
+            .background(if (isCurrentLecture) PrimaryContainer.copy(alpha = 0.4f) else Background)
+            .clickable(enabled = !lecture.isLocked) { onClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        // Icon
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(
                     when {
-                        isCurrentLesson -> Primary
-                        lesson.isCompleted -> PrimaryContainer
-                        lesson.isLocked -> SurfaceVariant
+                        isCurrentLecture -> Primary
+                        lecture.isCompleted -> PrimaryContainer
+                        lecture.isLocked -> SurfaceVariant
                         else -> SurfaceVariant
                     },
                 ),
             contentAlignment = Alignment.Center,
         ) {
             when {
-                lesson.isCompleted && !isCurrentLesson -> Icon(
+                lecture.isCompleted && !isCurrentLecture -> Icon(
                     Icons.Filled.CheckCircle,
                     null,
                     tint = Primary,
                     modifier = Modifier.size(20.dp),
                 )
-                lesson.isLocked -> Icon(
+                lecture.isLocked -> Icon(
                     Icons.Filled.Lock,
                     null,
                     tint = OnSurfaceMuted,
@@ -243,7 +233,7 @@ private fun PlayerLessonItem(
                 else -> Icon(
                     Icons.Filled.PlayArrow,
                     null,
-                    tint = if (isCurrentLesson) OnPrimary else OnSurfaceVariant,
+                    tint = if (isCurrentLecture) OnPrimary else OnSurfaceVariant,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -251,15 +241,15 @@ private fun PlayerLessonItem(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "${lesson.order.toString().padStart(2, '0')}. ${lesson.title}",
+                text = "${lecture.orderIndex.toString().padStart(2, '0')}. ${lecture.title}",
                 style = MaterialTheme.typography.titleSmall.copy(
                     color = when {
-                        lesson.isLocked -> OnSurfaceMuted
-                        isCurrentLesson -> Primary
+                        lecture.isLocked -> OnSurfaceMuted
+                        isCurrentLecture -> Primary
                         else -> OnSurface
                     },
-                    fontWeight = if (isCurrentLesson) FontWeight.SemiBold else FontWeight.Normal,
-                    textDecoration = if (lesson.isCompleted && !isCurrentLesson) {
+                    fontWeight = if (isCurrentLecture) FontWeight.SemiBold else FontWeight.Normal,
+                    textDecoration = if (lecture.isCompleted && !isCurrentLecture) {
                         TextDecoration.LineThrough
                     } else {
                         TextDecoration.None
@@ -270,15 +260,13 @@ private fun PlayerLessonItem(
             )
             Spacer(Modifier.height(2.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                val minutes = lesson.durationSeconds / 60
-                val seconds = lesson.durationSeconds % 60
                 Text(
-                    text = "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}",
+                    text = lecture.type.name,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = if (isCurrentLesson) Primary else OnSurfaceMuted,
+                        color = if (isCurrentLecture) Primary else OnSurfaceMuted,
                     ),
                 )
-                if (isCurrentLesson) {
+                if (isCurrentLecture) {
                     Text(
                         text = "• Đang phát",
                         style = MaterialTheme.typography.bodySmall.copy(
@@ -290,7 +278,7 @@ private fun PlayerLessonItem(
             }
         }
 
-        if (isCurrentLesson) {
+        if (isCurrentLecture) {
             Box(
                 modifier = Modifier
                     .size(8.dp)
@@ -301,22 +289,17 @@ private fun PlayerLessonItem(
     }
 }
 
-// ─────────────────────────────────────────────
-//  Top Bar
-// ─────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerTopBar(title: String, onBack: () -> Unit) {
     TopAppBar(
         title = {
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         },
         navigationIcon = {
             IconButton(onClick = onBack) {
@@ -332,7 +315,6 @@ private fun PlayerTopBar(title: String, onBack: () -> Unit) {
     )
 }
 
-// Helper
 private fun Modifier.tabIndicatorOffset(tabPosition: TabPosition): Modifier = this.fillMaxWidth(1f / 3)
     .wrapContentSize(Alignment.BottomStart)
     .offset(x = tabPosition.left)

@@ -9,36 +9,101 @@ package com.app.bitlearning.data.mapper
 import com.app.bitlearning.core.network.*
 import com.app.bitlearning.domain.model.*
 
-/**
- * Extension functions to convert API DTOs → Domain Models.
- * Used by real repository implementations when API is live.
- */
-
-fun CourseDto.toDomain(): Course = Course(
+fun CoursePreviewDto.toDomain(): Course = Course(
     id = id,
-    title = title,
-    description = description,
-    instructor = instructor,
+    code = code.orEmpty(),
+    title = title.orEmpty(),
+    description = description.orEmpty(),
+    instructor = instructorName.orEmpty(),
+    instructorId = instructorId,
     thumbnailUrl = thumbnailUrl,
-    category = CourseCategory.entries.find {
-        it.name.equals(category, ignoreCase = true)
-    } ?: CourseCategory.OTHER,
-    rating = rating,
-    reviewCount = reviewCount,
-    duration = duration,
-    lessonCount = lessonCount,
-    progress = progress,
+    level = level?.let { lvl ->
+        CourseLevel.entries.find { it.name.equals(lvl, ignoreCase = true) }
+    } ?: CourseLevel.BEGINNING,
+    rating = ratingStar ?: 0.0,
+    reviewCount = ratingCount ?: 0,
+    grade = grade,
+    price = price ?: 0,
 )
 
-fun LessonDto.toDomain(): Lesson = Lesson(
+fun CourseDetailDto.toDomain(): Course = Course(
     id = id,
-    courseId = courseId,
-    order = order,
-    title = title,
-    durationSeconds = durationSeconds,
-    videoUrl = videoUrl,
-    isCompleted = isCompleted,
-    isLocked = isLocked,
+    code = code.orEmpty(),
+    title = title.orEmpty(),
+    description = description.orEmpty(),
+    instructor = instructorName.orEmpty(),
+    instructorId = instructorId,
+    thumbnailUrl = thumbnailUrl,
+    level = level?.let { lvl ->
+        CourseLevel.entries.find { it.name.equals(lvl, ignoreCase = true) }
+    } ?: CourseLevel.BEGINNING,
+    rating = ratingStar ?: 0.0,
+    reviewCount = ratingCount ?: 0,
+    grade = grade,
+    price = price ?: 0,
+    totalSections = totalSections ?: 0,
+    totalLectures = totalLectures ?: 0,
+    totalDuration = totalDuration ?: 0,
+    progress = progressPercentage ?: 0f,
+    sections = sections?.map { it.toDomain() } ?: emptyList(),
+)
+
+fun MyCourseDto.toDomain(): Course = Course(
+    id = id,
+    code = code.orEmpty(),
+    title = title.orEmpty(),
+    description = description.orEmpty(),
+    instructor = instructorName.orEmpty(),
+    instructorId = instructorId,
+    thumbnailUrl = thumbnailUrl,
+    level = level?.let { lvl ->
+        CourseLevel.entries.find { it.name.equals(lvl, ignoreCase = true) }
+    } ?: CourseLevel.BEGINNING,
+    rating = ratingStar ?: 0.0,
+    reviewCount = ratingCount ?: 0,
+    grade = grade,
+    price = price ?: 0,
+    progress = progressPercentage ?: 0f,
+)
+
+
+fun EnrollmentDto.toDomain(): Course = Course(
+    id = courseId ?: 0,
+    code = courseCode.orEmpty(),
+    title = courseTitle.orEmpty(),
+    description = "",
+    instructor = instructorName.orEmpty(),
+    instructorId = instructorId,
+    thumbnailUrl = courseThumbnailUrl,
+    level = level?.let { lvl ->
+        CourseLevel.entries.find { it.name.equals(lvl, ignoreCase = true) }
+    } ?: CourseLevel.BEGINNING,
+    grade = grade,
+    progress = progressPercentage ?: 0f,
+)
+
+fun SectionDetailDto.toDomain(): Section = Section(
+    id = id ?: 0,
+    title = title.orEmpty(),
+    description = description,
+    orderIndex = orderIndex ?: 0,
+    totalLectures = totalLectures ?: 0,
+    totalDuration = totalDuration ?: 0,
+    progressPercentage = progressPercentage ?: 0f,
+    lectures = lectures?.map { it.toDomain() } ?: emptyList(),
+)
+
+fun LectureDetailDto.toDomain(): Lecture = Lecture(
+    id = id ?: 0,
+    sectionId = sectionId,
+    title = title.orEmpty(),
+    description = description,
+    type = type?.let { t ->
+        LectureType.entries.find { it.name.equals(t, ignoreCase = true) }
+    } ?: LectureType.VIDEO,
+    isPreviewable = isPreviewable ?: false,
+    orderIndex = orderIndex ?: 0,
+    isCompleted = isCompleted ?: false,
 )
 
 fun UserApiDto.toDomain(): User = User(
@@ -52,5 +117,3 @@ fun UserApiDto.toDomain(): User = User(
     memberSince = createdAt?.take(4)?.toIntOrNull() ?: 2024,
     isPremium = role?.equals("PREMIUM", ignoreCase = true) ?: false,
 )
-
-// TokenResponse mapper removed — auth tokens are handled directly by the repository layer.

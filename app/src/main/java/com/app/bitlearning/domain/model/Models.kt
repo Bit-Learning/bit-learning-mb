@@ -22,45 +22,85 @@ data class User(
 //  Course
 // ─────────────────────────────────────────────
 data class Course(
-    val id: String,
+    val id: Int,
+    val code: String = "",
     val title: String,
     val description: String,
     val instructor: String,
+    val instructorId: Int? = null,
     val thumbnailUrl: String?,
-    val category: CourseCategory,
-    val rating: Double,
-    val reviewCount: Int,
-    val duration: String, // e.g. "12h 30m"
-    val lessonCount: Int,
-    val progress: Float = 0f, // 0.0 → 1.0 (enrolled courses)
+    val category: CourseCategory = CourseCategory.OTHER,
+    val level: CourseLevel = CourseLevel.BEGINNING,
+    val rating: Double = 0.0,
+    val reviewCount: Int = 0,
+    val grade: Int? = null,
+    val price: Int = 0,
+    val totalSections: Int = 0,
+    val totalLectures: Int = 0,
+    val totalDuration: Int = 0,
+    val progress: Float = 0f,
     val isLocked: Boolean = false,
+    val sections: List<Section> = emptyList(),
 )
 
 // ─────────────────────────────────────────────
-//  Lesson
+//  Section
 // ─────────────────────────────────────────────
-data class Lesson(
-    val id: String,
-    val courseId: String,
-    val order: Int,
+data class Section(
+    val id: Int,
     val title: String,
-    val durationSeconds: Int,
-    val videoUrl: String?,
+    val description: String? = null,
+    val orderIndex: Int = 0,
+    val totalLectures: Int = 0,
+    val totalDuration: Int = 0,
+    val progressPercentage: Float = 0f,
+    val lectures: List<Lecture> = emptyList(),
+)
+
+// ─────────────────────────────────────────────
+//  Lecture (replaces Lesson)
+// ─────────────────────────────────────────────
+data class Lecture(
+    val id: Int,
+    val sectionId: Int? = null,
+    val title: String,
+    val description: String? = null,
+    val type: LectureType = LectureType.VIDEO,
+    val isPreviewable: Boolean = false,
+    val orderIndex: Int = 0,
     val isCompleted: Boolean = false,
     val isLocked: Boolean = false,
-    val isCurrentlyPlaying: Boolean = false,
 )
+
 
 // ─────────────────────────────────────────────
 //  Certificate
 // ─────────────────────────────────────────────
 data class Certificate(
     val id: String,
-    val courseId: String,
+    val courseId: Int,
     val courseTitle: String,
     val issuedDate: String,
     val thumbnailUrl: String?,
 )
+
+// ─────────────────────────────────────────────
+//  Course Level Enum (matches backend)
+// ─────────────────────────────────────────────
+enum class CourseLevel(val displayName: String) {
+    BEGINNING("Cơ bản"),
+    INTERMEDIATE("Trung cấp"),
+    ADVANCED("Nâng cao"),
+}
+
+// ─────────────────────────────────────────────
+//  Lecture Type Enum (matches backend)
+// ─────────────────────────────────────────────
+enum class LectureType {
+    VIDEO,
+    TEXT,
+    QUIZ,
+}
 
 // ─────────────────────────────────────────────
 //  Category Enum
