@@ -55,13 +55,21 @@ android {
         }
 
         manifestPlaceholders["appAuthRedirectScheme"] = "" // no longer used
-        
-        // Handle ktxpy module's cpuArch flavor dimension
-        missingDimensionStrategy("cpuArch", "arch_arm64")
-        
-        // Ensure native libraries are included
-        ndk {
-            abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64"))
+    }
+
+    flavorDimensions += "cpuArch"
+    productFlavors {
+        create("arch_arm64") {
+            dimension = "cpuArch"
+            ndk {
+                abiFilters.addAll(listOf("arm64-v8a"))
+            }
+        }
+        create("arch_x86_64") {
+            dimension = "cpuArch"
+            ndk {
+                abiFilters.addAll(listOf("x86_64"))
+            }
         }
     }
 
@@ -107,6 +115,9 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+        jniLibs {
+            useLegacyPackaging = true
         }
     }
 }
