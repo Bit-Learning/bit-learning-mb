@@ -9,9 +9,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.activity.enableEdgeToEdge
 import androidx.core.content.res.ResourcesCompat
 import com.blankj.utilcode.util.ClipboardUtils
 import com.blankj.utilcode.util.KeyboardUtils
@@ -35,6 +38,7 @@ class TermActivity : ComponentActivity(),TerminalViewClient {
     private lateinit var mTermView : TerminalView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent{
             KtxPyTheme {
                 TermScreen()
@@ -50,7 +54,9 @@ class TermActivity : ComponentActivity(),TerminalViewClient {
     fun TermScreen()
     {
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding(),
             factory = { context ->
                 mTermView = TerminalView(context , null)
                 Timber.d("Terminal has been created")
