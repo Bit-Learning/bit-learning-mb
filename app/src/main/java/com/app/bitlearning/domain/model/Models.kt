@@ -14,8 +14,55 @@ data class User(
     val name: String,
     val email: String,
     val avatar: String,
+    val coverImage: String? = null,
+    val pronouns: String? = null,
+    val phone: String? = null,
+    val bio: String? = null,
+    val location: String? = null,
+    val jobTitle: String? = null,
     val memberSince: Int,
     val isPremium: Boolean,
+)
+
+// ─────────────────────────────────────────────
+//  Onboarding
+// ─────────────────────────────────────────────
+data class OnboardingPage(
+    val id: Int,
+    val imageUrl: String,
+    val title: String,
+    val description: String,
+    val orderIndex: Int,
+)
+
+// ─────────────────────────────────────────────
+//  Forum
+// ─────────────────────────────────────────────
+data class ForumPost(
+    val id: Int,
+    val authorId: Int,
+    val authorName: String,
+    val authorAvatar: String?,
+    val title: String,
+    val content: String,
+    val mediaUrls: List<String> = emptyList(),
+    val likeCount: Int = 0,
+    val commentCount: Int = 0,
+    val isLiked: Boolean = false,
+    val createdAt: String,
+    val tags: List<String> = emptyList(),
+)
+
+data class ForumComment(
+    val id: Int,
+    val postId: Int,
+    val authorId: Int,
+    val authorName: String,
+    val authorAvatar: String?,
+    val content: String,
+    val createdAt: String,
+    val likeCount: Int = 0,
+    val isLiked: Boolean = false,
 )
 
 // ─────────────────────────────────────────────

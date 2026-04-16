@@ -114,6 +114,47 @@ fun UserApiDto.toDomain(): User = User(
         .ifBlank { username ?: email ?: "" },
     email = email ?: "",
     avatar = avatar ?: "https://randomuser.me/api/portraits/lego/1.jpg",
+    coverImage = coverImage,
+    pronouns = pronouns,
+    phone = phoneNumber,
+    bio = bio,
+    location = location,
+    jobTitle = jobTitle,
     memberSince = createdAt?.take(4)?.toIntOrNull() ?: 2024,
     isPremium = role?.equals("PREMIUM", ignoreCase = true) ?: false,
+)
+
+fun OnboardingPageDto.toDomain(): OnboardingPage = OnboardingPage(
+    id = id,
+    imageUrl = imageUrl.orEmpty(),
+    title = title.orEmpty(),
+    description = description.orEmpty(),
+    orderIndex = orderIndex ?: 0,
+)
+
+fun ForumPostDto.toDomain(): ForumPost = ForumPost(
+    id = id,
+    authorId = authorId ?: 0,
+    authorName = authorName.orEmpty(),
+    authorAvatar = authorAvatar,
+    title = title.orEmpty(),
+    content = content.orEmpty(),
+    mediaUrls = mediaUrls ?: emptyList(),
+    likeCount = likeCount ?: 0,
+    commentCount = commentCount ?: 0,
+    isLiked = isLiked ?: false,
+    createdAt = createdAt.orEmpty(),
+    tags = tags ?: emptyList(),
+)
+
+fun ForumCommentDto.toDomain(): ForumComment = ForumComment(
+    id = id,
+    postId = postId ?: 0,
+    authorId = authorId ?: 0,
+    authorName = authorName.orEmpty(),
+    authorAvatar = authorAvatar,
+    content = content.orEmpty(),
+    createdAt = createdAt.orEmpty(),
+    likeCount = likeCount ?: 0,
+    isLiked = isLiked ?: false,
 )

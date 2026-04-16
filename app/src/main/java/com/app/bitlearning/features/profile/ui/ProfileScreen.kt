@@ -20,11 +20,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.app.bitlearning.core.common.components.*
 import com.app.bitlearning.core.common.theme.*
 
@@ -36,6 +39,7 @@ fun ProfileScreen(
     onNavigateToCertificates: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToSupport: () -> Unit = {},
+    onNavigateToForum: () -> Unit = {},
     onNavigateToNotificationSetting: () -> Unit = {},
     onNavigateToPaymentSetting: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
@@ -65,6 +69,7 @@ fun ProfileScreen(
                         memberSince = uiState.user?.memberSince ?: 2024,
                         isPremium = uiState.user?.isPremium ?: false,
                         avatarUrl = uiState.user?.avatar,
+                        backgroundImageUrl = uiState.user?.coverImage,
                     )
                 }
 
@@ -92,6 +97,12 @@ fun ProfileScreen(
                                 title = "Lịch sử học tập",
                                 icon = Icons.Filled.History,
                                 onClick = onNavigateToHistory,
+                            )
+                            BLDivider(Modifier.padding(horizontal = 16.dp))
+                            BLMenuItemRow(
+                                title = "Diễn đàn",
+                                icon = Icons.Filled.Forum,
+                                onClick = onNavigateToForum,
                             )
                         }
                     }
@@ -248,42 +259,74 @@ private fun ProfileHeader(
     memberSince: Int,
     isPremium: Boolean,
     avatarUrl: String?,
+    backgroundImageUrl: String? = null,
 ) {
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .fillMaxWidth(),
     ) {
-        BLAvatar(
-            imageUrl = avatarUrl,
-            size = 96.dp,
-            showBadge = true,
-        )
-        Text(
-            text = name,
-            style = MaterialTheme.typography.headlineLarge,
-        )
-        Text(
-            text = "Thành viên từ $memberSince",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        if (isPremium) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(PremiumContainer)
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-            ) {
-                Text(
-                    text = "HỌC VIÊN PREMIUM",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Premium,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                    ),
+        // Background image
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp)
+                .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)),
+        ) {
+            if (backgroundImageUrl != null) {
+                AsyncImage(
+                    model = backgroundImageUrl,
+                    contentDescription = "Ảnh bìa",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.linearGradient(listOf(Primary, PrimaryLight)),
+                        ),
+                )
+            }
+        }
+
+        // Profile info overlapping
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 90.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            BLAvatar(
+                imageUrl = avatarUrl,
+                size = 96.dp,
+                showBadge = true,
+            )
+            Text(
+                text = name,
+                style = MaterialTheme.typography.headlineLarge,
+            )
+            Text(
+                text = "Thành viên từ $memberSince",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            if (isPremium) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(PremiumContainer)
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                ) {
+                    Text(
+                        text = "HỌC VIÊN PREMIUM",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = Premium,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp,
+                        ),
+                    )
+                }
             }
         }
     }

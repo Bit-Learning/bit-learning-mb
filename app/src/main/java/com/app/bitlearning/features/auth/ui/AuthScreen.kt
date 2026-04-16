@@ -36,24 +36,24 @@ import coil3.compose.AsyncImage
 import com.app.bitlearning.core.common.components.*
 import com.app.bitlearning.core.common.theme.*
 
-data class OnboardingPage(
+data class OnboardingPageLocal(
     val imageUrl: String,
     val title: String,
     val description: String,
 )
 
 private val onboardingPages = listOf(
-    OnboardingPage(
+    OnboardingPageLocal(
         imageUrl = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600",
         title = "Làm chủ kỹ năng\nmới mọi lúc, mọi nơi",
         description = "Tiếp cận hàng ngàn khóa học từ chuyên gia về công nghệ, thiết kế, kinh doanh và hơn thế nữa. Học theo tốc độ của riêng bạn với những giảng viên hàng đầu thế giới.",
     ),
-    OnboardingPage(
+    OnboardingPageLocal(
         imageUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600",
         title = "Học từ chuyên gia\nhàng đầu thế giới",
         description = "Các khóa học được thiết kế bởi những chuyên gia thực tế. Nội dung cập nhật liên tục, phù hợp với nhu cầu thực tiễn của thị trường.",
     ),
-    OnboardingPage(
+    OnboardingPageLocal(
         imageUrl = "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600",
         title = "Nhận chứng chỉ\ncó giá trị thực tế",
         description = "Hoàn thành khóa học và nhận chứng chỉ được công nhận rộng rãi. Nâng cao hồ sơ xin việc và khẳng định năng lực của bạn.",
@@ -182,7 +182,7 @@ fun AuthScreen(
 }
 
 @Composable
-private fun OnboardingPageContent(page: OnboardingPage) {
+private fun OnboardingPageContent(page: OnboardingPageLocal) {
     Column(
         modifier = Modifier
             .fillMaxSize()

@@ -57,6 +57,11 @@ constructor(
             .catch { emit(emptyPreferences()) }
             .map { it[ACCESS_TOKEN_KEY] }
 
+    val onboardingCompleted: Flow<Boolean> =
+        dataStore.data
+            .catch { emit(emptyPreferences()) }
+            .map { it[ONBOARDING_COMPLETED_KEY] ?: false }
+
     // ── Writers ── //
 
     suspend fun setUseMock(value: Boolean) {
@@ -65,6 +70,10 @@ constructor(
 
     suspend fun saveAccessToken(token: String) {
         dataStore.edit { it[ACCESS_TOKEN_KEY] = token }
+    }
+
+    suspend fun setOnboardingCompleted(value: Boolean) {
+        dataStore.edit { it[ONBOARDING_COMPLETED_KEY] = value }
     }
 
     suspend fun clearTokens() {
@@ -84,5 +93,6 @@ constructor(
     companion object {
         private val USE_MOCK_KEY = booleanPreferencesKey("use_mock")
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
+        private val ONBOARDING_COMPLETED_KEY = booleanPreferencesKey("onboarding_completed")
     }
 }

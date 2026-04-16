@@ -8,11 +8,15 @@ package com.app.bitlearning.core.network
 
 import com.app.bitlearning.data.repository.AuthRepositoryDelegator
 import com.app.bitlearning.data.repository.CourseRepositoryImpl
+import com.app.bitlearning.data.repository.ForumRepositoryImpl
 import com.app.bitlearning.data.repository.LessonRepositoryImpl
+import com.app.bitlearning.data.repository.OnboardingRepositoryImpl
 import com.app.bitlearning.data.repository.UserRepositoryImpl
 import com.app.bitlearning.domain.repository.AuthRepository
 import com.app.bitlearning.domain.repository.CourseRepository
+import com.app.bitlearning.domain.repository.ForumRepository
 import com.app.bitlearning.domain.repository.LessonRepository
+import com.app.bitlearning.domain.repository.OnboardingRepository
 import com.app.bitlearning.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -40,4 +44,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindUserRepository(impl: UserRepositoryImpl): UserRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindOnboardingRepository(impl: OnboardingRepositoryImpl): OnboardingRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindForumRepository(impl: ForumRepositoryImpl): ForumRepository
 }

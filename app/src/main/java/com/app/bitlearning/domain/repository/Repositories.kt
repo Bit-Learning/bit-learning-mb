@@ -36,5 +36,21 @@ interface LessonRepository {
 interface UserRepository {
     suspend fun getUserProfile(): Result<User>
     suspend fun updateProfile(user: User): Result<User>
+    suspend fun uploadAvatar(imageBytes: ByteArray, fileName: String): Result<String>
+    suspend fun uploadCover(imageBytes: ByteArray, fileName: String): Result<String>
     suspend fun getCertificates(): Result<List<Certificate>>
+}
+
+interface OnboardingRepository {
+    suspend fun getOnboardingPages(): Result<List<OnboardingPage>>
+}
+
+interface ForumRepository {
+    suspend fun getPosts(page: Int = 0, size: Int = 20): Result<List<ForumPost>>
+    suspend fun getPostById(id: Int): Result<ForumPost>
+    suspend fun createPost(title: String, content: String, tags: List<String> = emptyList()): Result<ForumPost>
+    suspend fun getComments(postId: Int, page: Int = 0, size: Int = 20): Result<List<ForumComment>>
+    suspend fun createComment(postId: Int, content: String): Result<ForumComment>
+    suspend fun likePost(postId: Int): Result<Unit>
+    suspend fun unlikePost(postId: Int): Result<Unit>
 }

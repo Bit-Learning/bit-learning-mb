@@ -113,8 +113,61 @@ interface BitLearningApiService {
     @GET("users/profile")
     suspend fun getProfile(): ApiWrapper<UserApiDto>
 
-    @PUT("users/me")
+    @PATCH("users/profile")
     suspend fun updateProfile(@Body body: UpdateProfileBody): ApiWrapper<UserApiDto>
+
+    @Multipart
+    @POST("users/{id}/avatar")
+    suspend fun uploadAvatar(@Path("id") id: Int, @Part avatar: okhttp3.MultipartBody.Part): ApiWrapper<String>
+
+    @Multipart
+    @POST("users/{id}/cover")
+    suspend fun uploadCover(@Path("id") id: Int, @Part cover: okhttp3.MultipartBody.Part): ApiWrapper<String>
+
+    // ─── Onboarding ─────────────────────────────────────────────────────────
+
+    @GET("onboarding/pages")
+    suspend fun getOnboardingPages(): ApiWrapper<List<OnboardingPageDto>>
+
+    // ─── Forum ──────────────────────────────────────────────────────────────
+
+    @GET("posts")
+    suspend fun getForumPosts(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20,
+    ): ApiWrapper<List<ForumPostDto>>
+
+    @GET("posts/{id}")
+    suspend fun getForumPostById(@Path("id") id: Int): ApiWrapper<ForumPostDto>
+
+    @POST("posts")
+    suspend fun createForumPost(@Body body: CreateForumPostBody): ApiWrapper<ForumPostDto>
+
+    @GET("comments")
+    suspend fun getForumComments(
+        @Query("postId") postId: Int,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20,
+    ): ApiWrapper<List<ForumCommentDto>>
+
+    @POST("posts/{postId}/comments")
+    suspend fun createForumComment(
+        @Path("postId") postId: Int,
+        @Body body: CreateForumCommentBody,
+    ): ApiWrapper<ForumCommentDto>
+
+    @POST("posts/{postId}/like")
+    suspend fun likeForumPost(@Path("postId") postId: Int): ApiWrapper<Unit>
+
+    @DELETE("posts/{postId}/like")
+    suspend fun unlikeForumPost(@Path("postId") postId: Int): ApiWrapper<Unit>
+
+    @Multipart
+    @POST("posts/{postId}/media")
+    suspend fun uploadForumMedia(
+        @Path("postId") postId: Int,
+        @Part media: okhttp3.MultipartBody.Part,
+    ): ApiWrapper<ForumMediaDto>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -163,8 +216,15 @@ data class RegisterBody(
 )
 
 data class UpdateProfileBody(
-    val name: String,
-    val avatarUrl: String?,
+    val username: String? = null,
+    val firstName: String? = null,
+    val lastName: String? = null,
+    val pronouns: String? = null,
+    val bio: String? = null,
+    val phoneNumber: String? = null,
+    val location: String? = null,
+    val jobTitle: String? = null,
+    val langKey: String? = null,
 )
 
 /**
@@ -217,13 +277,21 @@ data class OAuth2UserDto(
 data class UserApiDto(
     val id: Int?,
     val username: String?,
-    val email: String?,
     val firstName: String?,
     val lastName: String?,
     val avatar: String?,
-    val role: String?,
+    val coverImage: String?,
+    val pronouns: String?,
+    val email: String?,
     val activated: Boolean = false,
+    val role: String?,
+    val bio: String?,
+    val phoneNumber: String?,
+    val location: String?,
+    val jobTitle: String?,
+    val mfaEnabled: Boolean = false,
     val createdAt: String? = null,
+    val updatedAt: String? = null,
 )
 
 // ─── Course DTOs (matching backend CourseDto.java) ──────────────────────
@@ -328,4 +396,57 @@ data class EnrollmentDto(
     val level: String?,
     val grade: Int?,
     val createdAt: String?,
+)
+
+// ─── Onboarding DTOs ────────────────────────────────────────────────────
+
+data class OnboardingPageDto(
+    val id: Int,
+    val imageUrl: String?,
+    val title: String?,
+    val description: String?,
+    val orderIndex: Int?,
+)
+
+// ─── Forum DTOs ─────────────────────────────────────────────────────────
+
+data class ForumPostDto(
+    val id: Int,
+    val authorId: Int?,
+    val authorName: String?,
+    val authorAvatar: String?,
+    val title: String?,
+    val content: String?,
+    val mediaUrls: List<String>?,
+    val likeCount: Int?,
+    val commentCount: Int?,
+    val isLiked: Boolean?,
+    val createdAt: String?,
+    val tags: List<String>?,
+)
+
+data class ForumCommentDto(
+    val id: Int,
+    val postId: Int?,
+    val authorId: Int?,
+    val authorName: String?,
+    val authorAvatar: String?,
+    val content: String?,
+    val createdAt: String?,
+    val likeCount: Int?,
+    val isLiked: Boolean?,
+)
+
+data class ForumMediaDto(
+    val url: String?,
+)
+
+data class CreateForumPostBody(
+    val title: String,
+    val content: String,
+    val tags: List<String> = emptyList(),
+)
+
+data class CreateForumCommentBody(
+    val content: String,
 )

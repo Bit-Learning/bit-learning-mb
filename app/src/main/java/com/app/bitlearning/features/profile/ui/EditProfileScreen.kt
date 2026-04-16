@@ -1,12 +1,13 @@
 /**
  * Copyright (c) 2026 Bit Learning. All rights reserved.
- * This software is the confidential and proprietary information of hcmurs.
- * You shall not disclose such confidential information and shall use it only in
- * accordance with the terms of the license agreement you entered into with hcmurs.
  */
 package com.app.bitlearning.features.profile.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -20,13 +21,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.app.bitlearning.core.common.components.*
 import com.app.bitlearning.core.common.theme.*
 
@@ -38,9 +43,34 @@ fun EditProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { snackbarHostState.showSnackbar(it) }
+    }
+
+    // Avatar picker
+    val avatarLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent(),
+    ) { uri: Uri? ->
+        uri?.let {
+            val bytes = context.contentResolver.openInputStream(it)?.readBytes()
+            if (bytes != null) {
+                viewModel.uploadAvatar(bytes, "avatar.jpg")
+            }
+        }
+    }
+
+    // Background picker
+    val backgroundLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent(),
+    ) { uri: Uri? ->
+        uri?.let {
+            val bytes = context.contentResolver.openInputStream(it)?.readBytes()
+            if (bytes != null) {
+                viewModel.uploadBackground(bytes, "background.jpg")
+            }
+        }
     }
 
     Scaffold(
@@ -61,13 +91,12 @@ fun EditProfileScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
                     }
                 },
-                // Invisible action icon to keep title visually centered
                 actions = {
                     IconButton(onClick = {}, enabled = false) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
-                            tint = androidx.compose.ui.graphics.Color.Transparent,
+                            tint = Color.Transparent,
                         )
                     }
                 },
@@ -75,11 +104,7 @@ fun EditProfileScreen(
             )
         },
         bottomBar = {
-            Surface(
-                color = Surface,
-                tonalElevation = 0.dp,
-                shadowElevation = 8.dp,
-            ) {
+            Surface(color = Surface, tonalElevation = 0.dp, shadowElevation = 8.dp) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -104,44 +129,114 @@ fun EditProfileScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState()),
             ) {
-                // Avatar Section
-                Column(
+                // Background Image + Avatar Section
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                        .height(220.dp),
                 ) {
-                    Box {
-                        BLAvatar(
-                            imageUrl = uiState.avatarUrl,
-                            size = 128.dp,
-                            showBadge = false,
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(Primary)
-                                .align(Alignment.BottomEnd),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.PhotoCamera,
-                                contentDescription = "Thay đổi ảnh",
-                                tint = androidx.compose.ui.graphics.Color.White,
-                                modifier = Modifier.size(20.dp),
+                    // Background image
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
+                            .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
+                            .clickable { backgroundLauncher.launch("image/*") },
+                    ) {
+                        if (uiState.backgroundImageUrl != null) {
+                            AsyncImage(
+                                model = uiState.backgroundImageUrl,
+                                contentDescription = "Ảnh bìa",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.linearGradient(listOf(Primary, PrimaryLight)),
+                                    ),
                             )
                         }
+                        // Overlay edit icon
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (uiState.isUploadingBackground) {
+                                CircularProgressIndicator(
+                                    color = Color.White,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            } else {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Filled.PhotoCamera,
+                                        contentDescription = "Thay đổi ảnh bìa",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                    Text(
+                                        "Thay đổi ảnh bìa",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Medium,
+                                        ),
+                                    )
+                                }
+                            }
+                        }
                     }
-                    Text(
-                        text = "Thay đổi ảnh đại diện",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = Primary,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                    )
+
+                    // Avatar overlapping background
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .offset(y = 0.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clickable { avatarLauncher.launch("image/*") },
+                        ) {
+                            BLAvatar(
+                                imageUrl = uiState.avatarUrl,
+                                size = 120.dp,
+                                showBadge = false,
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(Primary)
+                                    .align(Alignment.BottomEnd),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                if (uiState.isUploadingAvatar) {
+                                    CircularProgressIndicator(
+                                        color = Color.White,
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp,
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Filled.PhotoCamera,
+                                        contentDescription = "Thay đổi ảnh",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
+
+                Spacer(Modifier.height(16.dp))
 
                 // Form Fields
                 Column(
@@ -182,7 +277,7 @@ fun EditProfileScreen(
                         leadingIcon = Icons.Filled.CalendarMonth,
                     )
 
-                    // Bio (multi-line)
+                    // Bio
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             text = "Giới thiệu bản thân",
@@ -231,9 +326,6 @@ fun EditProfileScreen(
     }
 }
 
-// ─────────────────────────────────────────────
-//  Reusable labeled field row
-// ─────────────────────────────────────────────
 @Composable
 private fun EditProfileField(
     label: String,

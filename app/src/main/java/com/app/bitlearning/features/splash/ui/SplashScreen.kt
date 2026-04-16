@@ -49,8 +49,7 @@ fun SplashScreen(
     LaunchedEffect(Unit) {
         visible = true
         delay(2200)
-        // TODO: Check stored auth token to decide route
-        // For now, navigate to auth
+        // Navigate to onboarding (which then goes to auth)
         onNavigateToAuth()
     }
 

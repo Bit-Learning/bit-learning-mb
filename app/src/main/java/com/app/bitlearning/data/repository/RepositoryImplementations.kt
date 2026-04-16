@@ -15,6 +15,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import okhttp3.MediaType.Companion.toMediaType
 
 // ─────────────────────────────────────────────
 //  Auth Repository Implementation (Mock)
@@ -165,15 +166,111 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateProfile(user: User): Result<User> = runCatching {
+        // Split name into firstName/lastName for backend
+        val parts = user.name.trim().split("\\s+".toRegex(), limit = 2)
         val wrapper = api.updateProfile(
             com.app.bitlearning.core.network.UpdateProfileBody(
-                name = user.name,
-                avatarUrl = user.avatar,
+                firstName = parts.getOrNull(0),
+                lastName = parts.getOrNull(1),
+                bio = user.bio,
+                phoneNumber = user.phone,
+                location = user.location,
+                jobTitle = user.jobTitle,
+                pronouns = user.pronouns,
             ),
         )
         val dto = wrapper.data ?: error(wrapper.message ?: "Cập nhật thất bại")
         dto.toDomain()
     }
 
+    override suspend fun uploadAvatar(imageBytes: ByteArray, fileName: String): Result<String> = runCatching {
+        // Get current user ID first
+        val profileWrapper = api.getProfile()
+        val userId = profileWrapper.data?.id ?: error("Không thể lấy thông tin người dùng")
+
+        val requestBody = okhttp3.RequestBody.Companion.create(
+            "image/*".toMediaType(), imageBytes,
+        )
+        val part = okhttp3.MultipartBody.Part.createFormData("avatar", fileName, requestBody)
+        val wrapper = api.uploadAvatar(userId, part)
+        wrapper.data ?: error(wrapper.message ?: "Upload thất bại")
+    }
+
+    override suspend fun uploadCover(imageBytes: ByteArray, fileName: String): Result<String> = runCatching {
+        // Get current user ID first
+        val profileWrapper = api.getProfile()
+        val userId = profileWrapper.data?.id ?: error("Không thể lấy thông tin người dùng")
+
+        val requestBody = okhttp3.RequestBody.Companion.create(
+            "image/*".toMediaType(), imageBytes,
+        )
+        val part = okhttp3.MultipartBody.Part.createFormData("cover", fileName, requestBody)
+        val wrapper = api.uploadCover(userId, part)
+        wrapper.data ?: error(wrapper.message ?: "Upload thất bại")
+    }
+
     override suspend fun getCertificates(): Result<List<Certificate>> = Result.success(emptyList())
+}
+
+// ─────────────────────────────────────────────
+//  Onboarding Repository Implementation (Real API)
+// ─────────────────────────────────────────────
+@Singleton
+class OnboardingRepositoryImpl @Inject constructor(
+    private val api: BitLearningApiService,
+) : OnboardingRepository {
+
+    override suspend fun getOnboardingPages(): Result<List<OnboardingPage>> = runCatching {
+        val wrapper = api.getOnboardingPages()
+        wrapper.data?.map { it.toDomain() }?.sortedBy { it.orderIndex } ?: emptyList()
+    }
+}
+
+// ─────────────────────────────────────────────
+//  Forum Repository Implementation (Real API)
+// ─────────────────────────────────────────────
+@Singleton
+class ForumRepositoryImpl @Inject constructor(
+    private val api: BitLearningApiService,
+) : ForumRepository {
+
+    override suspend fun getPosts(page: Int, size: Int): Result<List<ForumPost>> = runCatching {
+        val wrapper = api.getForumPosts(page = page, size = size)
+        wrapper.data?.map { it.toDomain() } ?: emptyList()
+    }
+
+    override suspend fun getPostById(id: Int): Result<ForumPost> = runCatching {
+        val wrapper = api.getForumPostById(id)
+        wrapper.data?.toDomain() ?: error(wrapper.message ?: "Không tìm thấy bài viết")
+    }
+
+    override suspend fun createPost(title: String, content: String, tags: List<String>): Result<ForumPost> = runCatching {
+        val wrapper = api.createForumPost(
+            com.app.bitlearning.core.network.CreateForumPostBody(title = title, content = content, tags = tags),
+        )
+        wrapper.data?.toDomain() ?: error(wrapper.message ?: "Tạo bài viết thất bại")
+    }
+
+    override suspend fun getComments(postId: Int, page: Int, size: Int): Result<List<ForumComment>> = runCatching {
+        val wrapper = api.getForumComments(postId = postId, page = page, size = size)
+        wrapper.data?.map { it.toDomain() } ?: emptyList()
+    }
+
+    override suspend fun createComment(postId: Int, content: String): Result<ForumComment> = runCatching {
+        val wrapper = api.createForumComment(
+            postId = postId,
+            body = com.app.bitlearning.core.network.CreateForumCommentBody(content = content),
+        )
+        wrapper.data?.toDomain() ?: error(wrapper.message ?: "Gửi bình luận thất bại")
+    }
+
+    override suspend fun likePost(postId: Int): Result<Unit> = runCatching {
+        api.likeForumPost(postId)
+        Unit
+    }
+
+    override suspend fun unlikePost(postId: Int): Result<Unit> = runCatching {
+        api.unlikeForumPost(postId)
+        Unit
+    }
 }

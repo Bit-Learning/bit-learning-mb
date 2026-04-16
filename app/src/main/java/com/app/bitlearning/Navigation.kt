@@ -15,10 +15,12 @@ import androidx.navigation.compose.composable
 import com.app.bitlearning.features.auth.ui.AuthScreen
 import com.app.bitlearning.features.coursedetail.ui.CourseDetailScreen
 import com.app.bitlearning.features.courses.ui.CoursesScreen
+import com.app.bitlearning.features.forum.ui.ForumScreen
 import com.app.bitlearning.features.history.ui.LearningHistoryScreen
 import com.app.bitlearning.features.home.ui.HomeScreen
 import com.app.bitlearning.features.notification.ui.NotificationScreen
 import com.app.bitlearning.features.notificationsetting.ui.NotificationSettingScreen
+import com.app.bitlearning.features.onboarding.ui.OnboardingScreen
 import com.app.bitlearning.features.payment.ui.PaymentSettingScreen
 import com.app.bitlearning.features.player.ui.PlayerScreen
 import com.app.bitlearning.features.profile.ui.EditProfileScreen
@@ -30,6 +32,7 @@ import com.app.bitlearning.features.support.ui.SupportScreen
 
 object Routes {
     const val SPLASH = "splash"
+    const val ONBOARDING = "onboarding"
     const val AUTH = "auth"
     const val HOME = "home"
     const val SEARCH = "search"
@@ -40,6 +43,7 @@ object Routes {
     const val NOTIFICATION = "notification"
     const val LEARNING_HISTORY = "learning_history"
     const val SUPPORT = "support"
+    const val FORUM = "forum"
     const val NOTIFICATION_SETTING = "notification_setting"
     const val PAYMENT_SETTING = "payment_setting"
     const val COURSE_DETAIL = "course_detail/{courseId}"
@@ -84,13 +88,23 @@ fun BitLearningNavGraph(
         composable(Routes.SPLASH) {
             SplashScreen(
                 onNavigateToAuth = {
-                    navController.navigate(Routes.AUTH) {
+                    navController.navigate(Routes.ONBOARDING) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
                     }
                 },
                 onNavigateToHome = {
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(Routes.ONBOARDING) {
+            OnboardingScreen(
+                onComplete = {
+                    navController.navigate(Routes.AUTH) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
                     }
                 },
             )
@@ -178,6 +192,7 @@ fun BitLearningNavGraph(
                 onNavigateToCertificates = { navController.navigate(Routes.MY_CERTIFICATES) },
                 onNavigateToHistory = { navController.navigate(Routes.LEARNING_HISTORY) },
                 onNavigateToSupport = { navController.navigate(Routes.SUPPORT) },
+                onNavigateToForum = { navController.navigate(Routes.FORUM) },
                 onNavigateToNotificationSetting = { navController.navigate(Routes.NOTIFICATION_SETTING) },
                 onNavigateToPaymentSetting = { navController.navigate(Routes.PAYMENT_SETTING) },
             )
@@ -234,6 +249,19 @@ fun BitLearningNavGraph(
 
         composable(Routes.SUPPORT) {
             SupportScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToHome = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME) { inclusive = false }
+                    }
+                },
+                onNavigateToCourses = { navController.navigate(Routes.COURSES) },
+                onNavigateToProfile = { navController.navigate(Routes.PROFILE) },
+            )
+        }
+
+        composable(Routes.FORUM) {
+            ForumScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToHome = {
                     navController.navigate(Routes.HOME) {

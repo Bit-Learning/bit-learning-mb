@@ -24,8 +24,11 @@ data class EditProfileUiState(
     val birthDate: String = "",
     val bio: String = "",
     val avatarUrl: String? = null,
+    val backgroundImageUrl: String? = null,
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
+    val isUploadingAvatar: Boolean = false,
+    val isUploadingBackground: Boolean = false,
     val saveSuccess: Boolean = false,
     val errorMessage: String? = null,
 )
@@ -49,10 +52,11 @@ class EditProfileViewModel @Inject constructor(
                 it.copy(
                     name = user?.name ?: "",
                     email = user?.email ?: "",
-                    phone = "",
+                    phone = user?.phone ?: "",
                     birthDate = "",
-                    bio = "",
+                    bio = user?.bio ?: "",
                     avatarUrl = user?.avatar,
+                    backgroundImageUrl = user?.coverImage,
                     isLoading = false,
                 )
             }
@@ -65,15 +69,50 @@ class EditProfileViewModel @Inject constructor(
     fun onBirthDateChange(value: String) = _uiState.update { it.copy(birthDate = value) }
     fun onBioChange(value: String) = _uiState.update { it.copy(bio = value) }
 
+    fun uploadAvatar(imageBytes: ByteArray, fileName: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingAvatar = true) }
+            userRepository.uploadAvatar(imageBytes, fileName)
+                .onSuccess { avatarUrl ->
+                    _uiState.update { it.copy(avatarUrl = avatarUrl, isUploadingAvatar = false) }
+                }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(isUploadingAvatar = false, errorMessage = e.message ?: "Upload ảnh thất bại")
+                    }
+                }
+        }
+    }
+
+    fun uploadBackground(imageBytes: ByteArray, fileName: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingBackground = true) }
+            userRepository.uploadCover(imageBytes, fileName)
+                .onSuccess { coverUrl ->
+                    _uiState.update { it.copy(backgroundImageUrl = coverUrl, isUploadingBackground = false) }
+                }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(isUploadingBackground = false, errorMessage = e.message ?: "Upload ảnh thất bại")
+                    }
+                }
+        }
+    }
+
     fun saveProfile(onSuccess: () -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, errorMessage = null) }
             val current = _uiState.value
+            // Split name into firstName/lastName
+            val parts = current.name.trim().split("\\s+".toRegex(), limit = 2)
             val updatedUser = User(
                 id = "",
                 name = current.name,
                 email = current.email,
                 avatar = current.avatarUrl ?: "",
+                coverImage = current.backgroundImageUrl,
+                phone = current.phone.ifBlank { null },
+                bio = current.bio.ifBlank { null },
                 memberSince = 2024,
                 isPremium = false,
             )
