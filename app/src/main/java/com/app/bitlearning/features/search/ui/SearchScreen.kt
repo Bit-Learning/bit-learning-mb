@@ -249,7 +249,7 @@ fun SearchScreen(
                 // ── Popular categories ────────────────────────────────────
                 item {
                     Text(
-                        text = "Danh mục phổ biến",
+                        text = "Chủ đề lập trình phổ biến",
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
                     )
@@ -501,8 +501,8 @@ private fun TrendingCourseRow(
 // ─────────────────────────────────────────────
 private fun categoryIcon(icon: String) = when (icon) {
     "terminal" -> Icons.Filled.Terminal
-    "palette" -> Icons.Filled.Palette
-    "payments" -> Icons.Filled.Payments
+    "code" -> Icons.Filled.Code
+    "data_object" -> Icons.Filled.DataObject
     "language" -> Icons.Filled.Language
     else -> Icons.Filled.Category
 }

@@ -49,6 +49,7 @@ fun CoursesScreen(
     viewModel: CoursesViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val availableCategories = CourseCategory.entries
 
     Scaffold(
         containerColor = Background,
@@ -109,28 +110,28 @@ fun CoursesScreen(
                         }
                     }
 
-                    // Filter chips — horizontal scroll
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = 20.dp)
-                            .padding(bottom = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        // "All" chip
-                        FilterChip(
-                            label = "Tất cả",
-                            selected = uiState.selectedCategory == null,
-                            onClick = { viewModel.setCategory(null) },
-                        )
-                        CourseCategory.entries.forEach { category ->
+                    if (availableCategories.size > 1) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                                .padding(horizontal = 20.dp)
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             FilterChip(
-                                label = category.displayName,
-                                selected = uiState.selectedCategory == category,
-                                onClick = { viewModel.setCategory(category) },
+                                label = "Tất cả",
+                                selected = uiState.selectedCategory == null,
+                                onClick = { viewModel.setCategory(null) },
                             )
+                            availableCategories.forEach { category ->
+                                FilterChip(
+                                    label = category.displayName,
+                                    selected = uiState.selectedCategory == category,
+                                    onClick = { viewModel.setCategory(category) },
+                                )
+                            }
                         }
                     }
 

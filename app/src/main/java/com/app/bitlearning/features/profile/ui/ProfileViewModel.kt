@@ -8,9 +8,11 @@ package com.app.bitlearning.features.profile.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.bitlearning.data.repository.toUserMessage
 import com.app.bitlearning.domain.model.Certificate
 import com.app.bitlearning.domain.model.User
 import com.app.bitlearning.domain.repository.AuthRepository
+import com.app.bitlearning.domain.repository.CourseRepository
 import com.app.bitlearning.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -23,11 +25,13 @@ data class ProfileUiState(
     val user: User? = null,
     val certificates: List<Certificate> = emptyList(),
     val isLoading: Boolean = true,
+    val errorMessage: String? = null,
 )
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
+    private val courseRepository: CourseRepository,
     private val authRepository: AuthRepository,
 ) : ViewModel() {
 
@@ -41,9 +45,25 @@ class ProfileViewModel @Inject constructor(
     private fun loadProfile() {
         viewModelScope.launch {
             val user = userRepository.getUserProfile().getOrNull()
-            val certs = userRepository.getCertificates().getOrElse { emptyList() }
+            val completedCountResult = courseRepository.getEnrolledCourses(page = 0, size = 100)
             _uiState.update {
-                it.copy(user = user, certificates = certs, isLoading = false)
+                it.copy(
+                    user = user,
+                    certificates = completedCountResult
+                        .getOrDefault(emptyList())
+                        .filter { course -> course.isCompleted || course.progress >= 1f }
+                        .map { course ->
+                            Certificate(
+                                id = "course-${course.id}",
+                                courseId = course.id,
+                                courseTitle = course.title,
+                                issuedDate = "",
+                                thumbnailUrl = course.thumbnailUrl,
+                            )
+                        },
+                    isLoading = false,
+                    errorMessage = completedCountResult.exceptionOrNull()?.toUserMessage("Không thể tải dữ liệu hồ sơ"),
+                )
             }
         }
     }

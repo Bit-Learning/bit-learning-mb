@@ -10,7 +10,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.bitlearning.domain.model.Course
-import com.app.bitlearning.domain.model.Lecture
+import com.app.bitlearning.domain.model.Section
 import com.app.bitlearning.features.coursedetail.domain.GetCourseDetailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -21,10 +21,17 @@ import kotlinx.coroutines.launch
 
 data class CourseDetailUiState(
     val course: Course? = null,
-    val lessons: List<Lecture> = emptyList(),
+    val sections: List<Section> = emptyList(),
+    val hasAccess: Boolean = false,
+    val progress: Float = 0f,
     val isLoading: Boolean = true,
     val error: String? = null,
-)
+) {
+    val lessons = sections
+        .filterNot { it.isDeleted }
+        .flatMap { section -> section.lectures.filterNot { it.isDeleted } }
+        .sortedBy { it.orderIndex }
+}
 
 @HiltViewModel
 class CourseDetailViewModel @Inject constructor(
@@ -45,10 +52,19 @@ class CourseDetailViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             getCourseDetailUseCase(courseId)
                 .onSuccess { data ->
+                    val sections = data.sections.map { section ->
+                        section.copy(
+                            lectures = section.lectures.map { lecture ->
+                                lecture.copy(isLocked = !data.hasAccess && !lecture.isPreviewable)
+                            },
+                        )
+                    }
                     _uiState.update {
                         it.copy(
-                            course = data.course,
-                            lessons = data.lessons,
+                            course = data.course.copy(sections = sections),
+                            sections = sections,
+                            hasAccess = data.hasAccess,
+                            progress = data.progress,
                             isLoading = false,
                         )
                     }

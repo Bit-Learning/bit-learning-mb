@@ -6,6 +6,9 @@
  */
 package com.app.bitlearning.features.profile.ui
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,6 +52,7 @@ fun MyCertificatesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showSearch by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Scaffold(
         containerColor = Background,
@@ -126,9 +131,9 @@ fun MyCertificatesScreen(
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = if (uiState.selectedTab == CertificateTab.RECEIVED) {
-                            "Bạn đã hoàn thành ${uiState.receivedCertificates.size} khóa học xuất sắc"
+                            "Bạn đã hoàn thành ${uiState.receivedCertificates.size} khóa học"
                         } else {
-                            "Chưa có chứng chỉ đang chờ xử lý"
+                            "Theo dõi tiến độ các khóa học chưa hoàn thành"
                         },
                         style = MaterialTheme.typography.bodyMedium.copy(color = OnSurfaceMuted),
                     )
@@ -141,17 +146,101 @@ fun MyCertificatesScreen(
                     item { BLLoadingIndicator(modifier = Modifier.height(300.dp)) }
                 }
 
-                uiState.displayedCertificates.isEmpty() -> {
+                uiState.errorMessage != null -> {
+                    item {
+                        CertificatesErrorState(
+                            message = uiState.errorMessage ?: "Không thể tải chứng chỉ",
+                            onRetry = viewModel::loadCertificates,
+                        )
+                    }
+                }
+
+                uiState.selectedTab == CertificateTab.RECEIVED && uiState.displayedReceivedCertificates.isEmpty() -> {
+                    item { EmptyState(tab = uiState.selectedTab) }
+                }
+
+                uiState.selectedTab == CertificateTab.PENDING && uiState.displayedPendingCertificates.isEmpty() -> {
                     item { EmptyState(tab = uiState.selectedTab) }
                 }
 
                 else -> {
-                    items(uiState.displayedCertificates, key = { it.id }) { cert ->
-                        CertificateCard(certificate = cert)
+                    if (uiState.selectedTab == CertificateTab.RECEIVED) {
+                        items(uiState.displayedReceivedCertificates, key = { item ->
+                            when (item) {
+                                is ReceivedCertificateItem.Ready -> item.certificate.id
+                                is ReceivedCertificateItem.Error -> "error-${item.courseId}"
+                            }
+                        }) { item ->
+                            when (item) {
+                                is ReceivedCertificateItem.Ready -> {
+                                    val cert = item.certificate
+                                    CertificateCard(
+                                        certificate = cert,
+                                        onShare = { shareCertificate(context, cert.localUri ?: cert.thumbnailUrl, cert.courseTitle) },
+                                        onOpen = { openCertificate(context, cert.localUri ?: cert.thumbnailUrl) },
+                                    )
+                                }
+
+                                is ReceivedCertificateItem.Error -> {
+                                    CertificateErrorCard(
+                                        title = item.courseTitle,
+                                        thumbnailUrl = item.thumbnailUrl,
+                                        message = item.message,
+                                        onRetry = {
+                                            viewModel.retryCertificate(
+                                                courseId = item.courseId,
+                                                courseTitle = item.courseTitle,
+                                                thumbnailUrl = item.thumbnailUrl,
+                                            )
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        items(uiState.displayedPendingCertificates, key = { it.id }) { cert ->
+                            CertificateCard(
+                                certificate = cert,
+                                onShare = { shareCertificate(context, cert.localUri ?: cert.thumbnailUrl, cert.courseTitle) },
+                                onOpen = { openCertificate(context, cert.localUri ?: cert.thumbnailUrl) },
+                            )
+                        }
                     }
                     item { Spacer(Modifier.height(8.dp)) }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CertificatesErrorState(
+    message: String,
+    onRetry: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 60.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Warning,
+            contentDescription = null,
+            tint = OnSurfaceMuted,
+            modifier = Modifier.size(56.dp),
+        )
+        Text(
+            text = "Không thể tải chứng chỉ",
+            style = MaterialTheme.typography.headlineSmall.copy(color = OnSurface),
+        )
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium.copy(color = OnSurfaceMuted),
+        )
+        Button(onClick = onRetry) {
+            Text("Thử lại")
         }
     }
 }
@@ -207,7 +296,11 @@ private fun TabRow(
 //  Certificate Card
 // ─────────────────────────────────────────────
 @Composable
-private fun CertificateCard(certificate: Certificate) {
+private fun CertificateCard(
+    certificate: Certificate,
+    onShare: () -> Unit,
+    onOpen: () -> Unit,
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -229,13 +322,13 @@ private fun CertificateCard(certificate: Certificate) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50.dp))
-                        .background(PrimaryContainer)
+                        .background(if (certificate.localUri != null) PrimaryContainer else SurfaceVariant)
                         .padding(horizontal = 10.dp, vertical = 3.dp),
                 ) {
                     Text(
-                        text = "HOÀN THÀNH",
+                        text = if (certificate.localUri != null) "HOÀN THÀNH" else "ĐANG HỌC",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Primary,
+                            color = if (certificate.localUri != null) Primary else OnSurfaceMuted,
                             fontWeight = FontWeight.Bold,
                             fontSize = 9.sp,
                             letterSpacing = 0.8.sp,
@@ -274,12 +367,13 @@ private fun CertificateCard(certificate: Certificate) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Download
                     Button(
-                        onClick = {},
+                        onClick = onShare,
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
                         modifier = Modifier.height(36.dp),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Primary),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+                        enabled = certificate.localUri != null,
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Download,
@@ -298,12 +392,13 @@ private fun CertificateCard(certificate: Certificate) {
 
                     // View detail
                     Button(
-                        onClick = {},
+                        onClick = onOpen,
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
                         modifier = Modifier.height(36.dp),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = SurfaceVariant),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+                        enabled = certificate.localUri != null,
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Visibility,
@@ -327,6 +422,93 @@ private fun CertificateCard(certificate: Certificate) {
             AsyncImage(
                 model = certificate.thumbnailUrl,
                 contentDescription = "Chứng chỉ",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .width(110.dp)
+                    .aspectRatio(4f / 3f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(SurfaceVariant),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CertificateErrorCard(
+    title: String,
+    thumbnailUrl: String?,
+    message: String,
+    onRetry: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(SurfaceVariant)
+                        .padding(horizontal = 10.dp, vertical = 3.dp),
+                ) {
+                    Text(
+                        text = "LỖI TẢI",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = OnSurfaceMuted,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 9.sp,
+                            letterSpacing = 0.8.sp,
+                        ),
+                    )
+                }
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall.copy(color = OnSurfaceMuted),
+                )
+                Button(
+                    onClick = onRetry,
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+                    modifier = Modifier.height(36.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "Tải lại",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                        ),
+                    )
+                }
+            }
+
+            AsyncImage(
+                model = thumbnailUrl,
+                contentDescription = "Khóa học đã hoàn thành",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .width(110.dp)
@@ -479,3 +661,25 @@ private fun navBarColors() = NavigationBarItemDefaults.colors(
     unselectedTextColor = OnSurfaceMuted,
     indicatorColor = PrimaryContainer,
 )
+
+private fun openCertificate(context: Context, uriValue: String?) {
+    if (uriValue.isNullOrBlank()) return
+    val uri = Uri.parse(uriValue)
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "image/*")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(Intent.createChooser(intent, "Mở chứng chỉ"))
+}
+
+private fun shareCertificate(context: Context, uriValue: String?, title: String) {
+    if (uriValue.isNullOrBlank()) return
+    val uri = Uri.parse(uriValue)
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "image/*"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        putExtra(Intent.EXTRA_SUBJECT, title)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(Intent.createChooser(intent, "Chia sẻ chứng chỉ"))
+}

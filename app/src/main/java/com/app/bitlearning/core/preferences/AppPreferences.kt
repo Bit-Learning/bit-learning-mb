@@ -13,6 +13,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -73,6 +74,20 @@ constructor(
         }
     }
 
+    suspend fun saveLastOpenedLectureId(courseId: Int, lectureId: Int) {
+        dataStore.edit { it[lastOpenedLectureKey(courseId)] = lectureId }
+    }
+
+    suspend fun getLastOpenedLectureId(courseId: Int): Int? =
+        dataStore.data
+            .catch { emit(emptyPreferences()) }
+            .map { it[lastOpenedLectureKey(courseId)] }
+            .first()
+
+    suspend fun clearLastOpenedLectureId(courseId: Int) {
+        dataStore.edit { it.remove(lastOpenedLectureKey(courseId)) }
+    }
+
     /**
      * Blocking read for use inside OkHttp Interceptor (runs on I/O thread, not main).
      * Do **not** call from the main thread.
@@ -84,5 +99,8 @@ constructor(
     companion object {
         private val USE_MOCK_KEY = booleanPreferencesKey("use_mock")
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
+
+        private fun lastOpenedLectureKey(courseId: Int) =
+            intPreferencesKey("last_opened_lecture_$courseId")
     }
 }

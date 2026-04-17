@@ -35,12 +35,15 @@ import com.app.bitlearning.domain.model.Lecture
 fun CourseDetailScreen(
     courseId: Int,
     onNavigateBack: () -> Unit,
-    onStartLesson: (Int) -> Unit,
+    onStartLesson: (Int, Int) -> Unit,
     viewModel: CourseDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Bài học", "Giới thiệu", "Tài liệu")
+    val firstAccessibleLecture = remember(uiState.lessons, uiState.hasAccess) {
+        uiState.lessons.firstOrNull { uiState.hasAccess || it.isPreviewable }
+    }
 
     Scaffold(
         containerColor = Background,
@@ -54,13 +57,18 @@ fun CourseDetailScreen(
             if (!uiState.isLoading && uiState.course != null) {
                 Box(modifier = Modifier.padding(16.dp)) {
                     BLPrimaryButton(
-                        text = if ((uiState.course?.progress ?: 0f) > 0f) {
+                        text = if ((uiState.progress) > 0f) {
                             "Tiếp tục học"
                         } else {
                             "Bắt đầu học"
                         },
-                        onClick = { onStartLesson(courseId) },
+                        onClick = {
+                            firstAccessibleLecture?.let { lecture ->
+                                onStartLesson(courseId, lecture.id)
+                            }
+                        },
                         leadingIcon = Icons.Filled.PlayArrow,
+                        enabled = firstAccessibleLecture != null,
                     )
                 }
             }
@@ -117,13 +125,20 @@ fun CourseDetailScreen(
                                 text = formatTotalDuration(course.totalDuration),
                             )
                         }
-                        if (course.progress > 0f) {
+                        if (uiState.progress > 0f) {
                             BLProgressBar(
-                                progress = course.progress,
+                                progress = uiState.progress,
                                 showLabel = true,
                                 label = "TIẾN ĐỘ KHÓA HỌC",
                             )
                         }
+                        Text(
+                            text = if (uiState.hasAccess) "Bạn đã có quyền học khóa này" else "Chỉ xem được các bài học thử",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = if (uiState.hasAccess) Primary else OnSurfaceMuted,
+                                fontWeight = FontWeight.Medium,
+                            ),
+                        )
                     }
                     BLDivider()
                 }
@@ -168,7 +183,7 @@ fun CourseDetailScreen(
                         LectureItem(
                             lecture = lecture,
                             onClick = {
-                                if (!lecture.isLocked) onStartLesson(courseId)
+                                if (!lecture.isLocked) onStartLesson(courseId, lecture.id)
                             },
                         )
                         BLDivider(Modifier.padding(horizontal = 16.dp))
@@ -178,11 +193,24 @@ fun CourseDetailScreen(
                 // Tab content - Description
                 if (selectedTab == 1) {
                     item {
-                        Text(
-                            text = course.description,
-                            style = MaterialTheme.typography.bodyLarge,
+                        Column(
                             modifier = Modifier.padding(20.dp),
-                        )
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text(text = course.description, style = MaterialTheme.typography.bodyLarge)
+                            if (course.outcome.isNotBlank()) {
+                                Text("Kết quả đạt được", style = MaterialTheme.typography.titleMedium)
+                                Text(course.outcome, style = MaterialTheme.typography.bodyMedium)
+                            }
+                            if (course.requirement.isNotBlank()) {
+                                Text("Yêu cầu", style = MaterialTheme.typography.titleMedium)
+                                Text(course.requirement, style = MaterialTheme.typography.bodyMedium)
+                            }
+                            if (course.audience.isNotBlank()) {
+                                Text("Đối tượng phù hợp", style = MaterialTheme.typography.titleMedium)
+                                Text(course.audience, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
                     }
                 }
 

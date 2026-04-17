@@ -25,11 +25,21 @@ interface CourseRepository {
     suspend fun getCoursesByGrade(grade: Int, page: Int = 0, size: Int = 10): Result<List<Course>>
     suspend fun getEnrolledCourses(page: Int = 0, size: Int = 10): Result<List<Course>>
     suspend fun getMyCourses(page: Int = 0, size: Int = 10): Result<List<Course>>
+    suspend fun checkCourseAccess(courseId: Int): Result<Boolean>
+    suspend fun getCourseProgress(courseId: Int): Result<Float>
+    suspend fun getCertificate(courseId: Int, courseTitle: String): Result<Certificate>
     suspend fun searchCourses(query: String): Result<List<Course>>
 }
 
 interface LessonRepository {
+    suspend fun getSectionsByCourse(courseId: Int): Result<List<Section>>
     suspend fun getLessonsForCourse(courseId: Int): Result<List<Lecture>>
+    suspend fun getVideoM3u8Url(lectureId: Int): Result<String>
+    suspend fun getLectureText(lectureId: Int): Result<LectureTextContent>
+    suspend fun getLectureQuiz(lectureId: Int): Result<LectureQuizContent>
+    suspend fun getLectureProgress(lectureId: Int): Result<Int>
+    suspend fun isLectureCompleted(lectureId: Int): Result<Boolean>
+    suspend fun syncProgress(request: SyncProgressRequest): Result<Unit>
     suspend fun markLectureCompleted(lectureId: Int): Result<Unit>
 }
 

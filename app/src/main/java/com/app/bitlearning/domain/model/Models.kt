@@ -26,10 +26,11 @@ data class Course(
     val code: String = "",
     val title: String,
     val description: String,
+    val subtitle: String = "",
     val instructor: String,
     val instructorId: Int? = null,
     val thumbnailUrl: String?,
-    val category: CourseCategory = CourseCategory.OTHER,
+    val category: CourseCategory = CourseCategory.DEVELOPMENT,
     val level: CourseLevel = CourseLevel.BEGINNING,
     val rating: Double = 0.0,
     val reviewCount: Int = 0,
@@ -39,6 +40,12 @@ data class Course(
     val totalLectures: Int = 0,
     val totalDuration: Int = 0,
     val progress: Float = 0f,
+    val isCompleted: Boolean = false,
+    val language: String = "",
+    val outcome: String = "",
+    val requirement: String = "",
+    val audience: String = "",
+    val hasAccess: Boolean = false,
     val isLocked: Boolean = false,
     val sections: List<Section> = emptyList(),
 )
@@ -50,10 +57,12 @@ data class Section(
     val id: Int,
     val title: String,
     val description: String? = null,
+    val isPublished: Boolean = true,
     val orderIndex: Int = 0,
     val totalLectures: Int = 0,
     val totalDuration: Int = 0,
     val progressPercentage: Float = 0f,
+    val isDeleted: Boolean = false,
     val lectures: List<Lecture> = emptyList(),
 )
 
@@ -69,6 +78,8 @@ data class Lecture(
     val isPreviewable: Boolean = false,
     val orderIndex: Int = 0,
     val isCompleted: Boolean = false,
+    val isDeleted: Boolean = false,
+    val progress: Float = 0f,
     val isLocked: Boolean = false,
 )
 
@@ -82,6 +93,39 @@ data class Certificate(
     val courseTitle: String,
     val issuedDate: String,
     val thumbnailUrl: String?,
+    val localUri: String? = null,
+)
+
+data class LectureTextContent(
+    val lecture: Lecture,
+    val content: String,
+)
+
+data class QuizAnswer(
+    val id: Int,
+    val answerText: String,
+    val isCorrect: Boolean,
+    val orderIndex: Int,
+)
+
+data class QuizQuestion(
+    val id: Int,
+    val questionText: String,
+    val orderIndex: Int,
+    val answers: List<QuizAnswer>,
+)
+
+data class LectureQuizContent(
+    val lecture: Lecture,
+    val passPercent: Float,
+    val maxAttempts: Int,
+    val quizzes: List<QuizQuestion>,
+)
+
+data class SyncProgressRequest(
+    val lectureId: Int,
+    val currentSecond: Int,
+    val totalDuration: Int,
 )
 
 // ─────────────────────────────────────────────
@@ -106,12 +150,7 @@ enum class LectureType {
 //  Category Enum
 // ─────────────────────────────────────────────
 enum class CourseCategory(val displayName: String, val colorHex: String) {
-    DESIGN("Design", "#8B5CF6"),
-    DEVELOPMENT("Development", "#0EA5E9"),
-    BUSINESS("Business", "#F59E0B"),
-    MARKETING("Marketing", "#EC4899"),
-    DATA_SCIENCE("Data Science", "#10B981"),
-    OTHER("Other", "#64748B"),
+    DEVELOPMENT("Lập trình", "#0EA5E9"),
 }
 
 // ─────────────────────────────────────────────

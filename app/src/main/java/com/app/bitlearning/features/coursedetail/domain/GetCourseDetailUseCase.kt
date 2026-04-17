@@ -7,24 +7,46 @@
 package com.app.bitlearning.features.coursedetail.domain
 
 import com.app.bitlearning.domain.model.Course
-import com.app.bitlearning.domain.model.Lecture
+import com.app.bitlearning.domain.model.Section
 import com.app.bitlearning.domain.repository.CourseRepository
 import com.app.bitlearning.domain.repository.LessonRepository
 import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 data class CourseDetailData(
     val course: Course,
-    val lessons: List<Lecture>,
+    val sections: List<Section>,
+    val hasAccess: Boolean,
+    val progress: Float,
 )
 
 class GetCourseDetailUseCase @Inject constructor(
     private val courseRepository: CourseRepository,
     private val lessonRepository: LessonRepository,
 ) {
-    suspend operator fun invoke(courseId: Int): Result<CourseDetailData> {
-        val courseResult = courseRepository.getCourseById(courseId)
-        val course = courseResult.getOrElse { return Result.failure(it) }
-        val lessons = lessonRepository.getLessonsForCourse(courseId).getOrElse { emptyList() }
-        return Result.success(CourseDetailData(course, lessons))
+    suspend operator fun invoke(courseId: Int): Result<CourseDetailData> = runCatching {
+        coroutineScope {
+            val courseDeferred = async { courseRepository.getCourseById(courseId).getOrThrow() }
+            val sectionsDeferred = async { lessonRepository.getSectionsByCourse(courseId).getOrThrow() }
+            val accessDeferred = async { courseRepository.checkCourseAccess(courseId).getOrElse { false } }
+            val progressDeferred = async { courseRepository.getCourseProgress(courseId).getOrElse { 0f } }
+
+            val sections = sectionsDeferred.await()
+            val hasAccess = accessDeferred.await()
+            val progress = progressDeferred.await()
+            val course = courseDeferred.await().copy(
+                sections = sections,
+                progress = progress,
+                hasAccess = hasAccess,
+            )
+
+            CourseDetailData(
+                course = course,
+                sections = sections,
+                hasAccess = hasAccess,
+                progress = progress,
+            )
+        }
     }
 }

@@ -6,15 +6,25 @@
  */
 package com.app.bitlearning.data.repository
 
+import android.content.Context
+import androidx.core.content.FileProvider
+import com.app.bitlearning.core.network.NetworkModule
 import com.app.bitlearning.core.network.BitLearningApiService
+import com.app.bitlearning.core.network.SyncProgressBody
 import com.app.bitlearning.data.mapper.toDomain
 import com.app.bitlearning.domain.model.*
 import com.app.bitlearning.domain.repository.*
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import retrofit2.HttpException
 
 // ─────────────────────────────────────────────
 //  Auth Repository Implementation (Mock)
@@ -90,6 +100,7 @@ class MockAuthRepositoryImpl @Inject constructor() : AuthRepository {
 @Singleton
 class CourseRepositoryImpl @Inject constructor(
     private val api: BitLearningApiService,
+    @ApplicationContext private val context: Context,
 ) : CourseRepository {
 
     override suspend fun getCourses(page: Int, size: Int): Result<List<Course>> = runCatching {
@@ -117,9 +128,48 @@ class CourseRepositoryImpl @Inject constructor(
         wrapper.data?.map { it.toDomain() } ?: emptyList()
     }
 
+    override suspend fun checkCourseAccess(courseId: Int): Result<Boolean> = runCatching {
+        val wrapper = api.checkCourseAccess(courseId)
+        wrapper.data ?: false
+    }
+
+    override suspend fun getCourseProgress(courseId: Int): Result<Float> = runCatching {
+        val wrapper = api.getCourseProgress(courseId)
+        normalizeProgress(wrapper.data)
+    }
+
+    override suspend fun getCertificate(courseId: Int, courseTitle: String): Result<Certificate> = runCatching {
+        val response = api.getCertificate(courseId)
+        if (!response.isSuccessful) {
+            error("Không thể tải chứng chỉ")
+        }
+
+        val issuedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val file = saveCertificateToCache(
+            context = context,
+            courseId = courseId,
+            courseTitle = courseTitle,
+            bytes = response.body()?.bytes() ?: error("Chứng chỉ trống"),
+        )
+
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file,
+        )
+
+        Certificate(
+            id = "course-$courseId",
+            courseId = courseId,
+            courseTitle = courseTitle,
+            issuedDate = issuedDate,
+            thumbnailUrl = uri.toString(),
+            localUri = uri.toString(),
+        )
+    }
+
     override suspend fun searchCourses(query: String): Result<List<Course>> = runCatching {
-        // Backend doesn't have a dedicated search endpoint yet; filter from all courses
-        val wrapper = api.getCourses(page = 0, size = 50)
+        val wrapper = api.getCourses(page = 0, size = 100)
         wrapper.data?.map { it.toDomain() }?.filter {
             it.title.contains(query, ignoreCase = true) ||
                 it.instructor.contains(query, ignoreCase = true)
@@ -135,13 +185,51 @@ class LessonRepositoryImpl @Inject constructor(
     private val api: BitLearningApiService,
 ) : LessonRepository {
 
+    override suspend fun getSectionsByCourse(courseId: Int): Result<List<Section>> = runCatching {
+        val wrapper = api.getSectionsByCourse(courseId)
+        wrapper.data?.map { it.toDomain() }?.filterNot { it.isDeleted } ?: emptyList()
+    }
+
     override suspend fun getLessonsForCourse(courseId: Int): Result<List<Lecture>> = runCatching {
-        // Get course detail which includes sections → lectures
-        val wrapper = api.getCourseById(courseId)
-        val detail = wrapper.data ?: error(wrapper.message ?: "Không tìm thấy khóa học")
-        detail.sections?.flatMap { section ->
-            section.lectures?.map { it.toDomain() } ?: emptyList()
-        } ?: emptyList()
+        getSectionsByCourse(courseId)
+            .getOrThrow()
+            .flatMap { section -> section.lectures }
+            .sortedBy { it.orderIndex }
+    }
+
+    override suspend fun getVideoM3u8Url(lectureId: Int): Result<String> = runCatching {
+        "${NetworkModule.BASE_URL}lectures/lecture-videos/$lectureId/m3u8"
+    }
+
+    override suspend fun getLectureText(lectureId: Int): Result<LectureTextContent> = runCatching {
+        val wrapper = api.getLectureText(lectureId)
+        wrapper.data?.toDomain() ?: error(wrapper.message ?: "Không tải được nội dung bài học")
+    }
+
+    override suspend fun getLectureQuiz(lectureId: Int): Result<LectureQuizContent> = runCatching {
+        val wrapper = api.getLectureQuiz(lectureId)
+        wrapper.data?.toDomain() ?: error(wrapper.message ?: "Không tải được bài tập")
+    }
+
+    override suspend fun getLectureProgress(lectureId: Int): Result<Int> = runCatching {
+        val wrapper = api.getLectureProgress(lectureId)
+        wrapper.data ?: 0
+    }
+
+    override suspend fun isLectureCompleted(lectureId: Int): Result<Boolean> = runCatching {
+        val wrapper = api.isLectureCompleted(lectureId)
+        wrapper.data ?: false
+    }
+
+    override suspend fun syncProgress(request: SyncProgressRequest): Result<Unit> = runCatching {
+        api.syncProgress(
+            SyncProgressBody(
+                lectureId = request.lectureId,
+                currentSecond = request.currentSecond,
+                totalDuration = request.totalDuration,
+            ),
+        )
+        Unit
     }
 
     override suspend fun markLectureCompleted(lectureId: Int): Result<Unit> = runCatching {
@@ -156,6 +244,7 @@ class LessonRepositoryImpl @Inject constructor(
 @Singleton
 class UserRepositoryImpl @Inject constructor(
     private val api: BitLearningApiService,
+    private val courseRepository: CourseRepository,
 ) : UserRepository {
 
     override suspend fun getUserProfile(): Result<User> = runCatching {
@@ -175,5 +264,41 @@ class UserRepositoryImpl @Inject constructor(
         dto.toDomain()
     }
 
-    override suspend fun getCertificates(): Result<List<Certificate>> = Result.success(emptyList())
+    override suspend fun getCertificates(): Result<List<Certificate>> = runCatching {
+        val courses = api.getEnrolledCourses(page = 0, size = 100).data.orEmpty()
+            .map { it.toDomain() }
+            .filter { it.isCompleted || it.progress >= 1f }
+
+        courses.map { course ->
+            courseRepository.getCertificate(course.id, course.title).getOrThrow()
+        }
+    }
+}
+
+private fun normalizeProgress(value: Float?): Float {
+    val raw = value ?: 0f
+    return if (raw <= 1f) raw.coerceIn(0f, 1f) else (raw / 100f).coerceIn(0f, 1f)
+}
+
+private fun saveCertificateToCache(
+    context: Context,
+    courseId: Int,
+    courseTitle: String,
+    bytes: ByteArray,
+): File {
+    val safeTitle = courseTitle.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
+    val dir = File(context.cacheDir, "certificates").apply { mkdirs() }
+    val file = File(dir, "certificate-$courseId-$safeTitle.png")
+    file.writeBytes(bytes)
+    return file
+}
+
+internal fun Throwable.toUserMessage(default: String): String = when (this) {
+    is HttpException -> when (code()) {
+        401 -> "Phiên đăng nhập đã hết hạn"
+        403 -> "Bạn chưa có quyền truy cập dữ liệu này"
+        404 -> "Không tìm thấy dữ liệu"
+        else -> message ?: default
+    }
+    else -> message ?: default
 }

@@ -7,6 +7,9 @@
 package com.app.bitlearning.core.network
 
 import com.google.gson.annotations.SerializedName
+import okhttp3.ResponseBody
+import retrofit2.Response
+import retrofit2.http.Streaming
 import retrofit2.http.*
 
 /**
@@ -102,10 +105,37 @@ interface BitLearningApiService {
     @GET("enrollments/courses/{courseId}/access")
     suspend fun checkCourseAccess(@Path("courseId") courseId: Int): ApiWrapper<Boolean>
 
+    @GET("enrollments/courses/{courseId}/progress")
+    suspend fun getCourseProgress(@Path("courseId") courseId: Int): ApiWrapper<Float>
+
     // ─── Learning ───────────────────────────────────────────────────────────
+
+    @GET("sections")
+    suspend fun getSectionsByCourse(
+        @Query("courseId") courseId: Int,
+    ): ApiWrapper<List<SectionDetailDto>>
+
+    @GET("lectures/lecture-quizzes/{lectureId}")
+    suspend fun getLectureQuiz(@Path("lectureId") lectureId: Int): ApiWrapper<LectureQuizDto>
+
+    @GET("lectures/lecture-texts/{lectureId}")
+    suspend fun getLectureText(@Path("lectureId") lectureId: Int): ApiWrapper<LectureTextDto>
+
+    @GET("learning/progress/lectures/{lectureId}")
+    suspend fun getLectureProgress(@Path("lectureId") lectureId: Int): ApiWrapper<Int>
+
+    @GET("learning/progress/lectures/{lectureId}/is-completed")
+    suspend fun isLectureCompleted(@Path("lectureId") lectureId: Int): ApiWrapper<Boolean>
+
+    @POST("learning/progress/sync")
+    suspend fun syncProgress(@Body body: SyncProgressBody): ApiWrapper<Unit>
 
     @POST("learning/progress/lectures/{lectureId}/complete")
     suspend fun markLectureCompleted(@Path("lectureId") lectureId: Int): ApiWrapper<Unit>
+
+    @Streaming
+    @GET("courses/{courseId}/certificate")
+    suspend fun getCertificate(@Path("courseId") courseId: Int): Response<ResponseBody>
 
     // ─── User ───────────────────────────────────────────────────────────────
 
@@ -181,6 +211,12 @@ data class GoogleIdTokenBody(
 data class OAuth2LoginBody(
     val code: String,
     val redirectUri: String,
+)
+
+data class SyncProgressBody(
+    val lectureId: Int,
+    val currentSecond: Int,
+    val totalDuration: Int,
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -313,6 +349,33 @@ data class LectureDetailDto(
     val orderIndex: Int?,
     val isDeleted: Boolean?,
     val isCompleted: Boolean?,
+    val progressPercentage: Float? = null,
+)
+
+data class LectureTextDto(
+    val lecture: LectureDetailDto?,
+    val content: String?,
+)
+
+data class AnswerDetailDto(
+    val id: Int?,
+    val answerText: String?,
+    val isCorrect: Boolean?,
+    val orderIndex: Int?,
+)
+
+data class QuizDetailDto(
+    val id: Int?,
+    val questionText: String?,
+    val orderIndex: Int?,
+    val answers: List<AnswerDetailDto>?,
+)
+
+data class LectureQuizDto(
+    val lecture: LectureDetailDto?,
+    val passPercent: Float?,
+    val maxAttempts: Int?,
+    val quizzes: List<QuizDetailDto>?,
 )
 
 data class EnrollmentDto(

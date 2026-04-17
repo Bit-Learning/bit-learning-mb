@@ -43,10 +43,10 @@ object Routes {
     const val NOTIFICATION_SETTING = "notification_setting"
     const val PAYMENT_SETTING = "payment_setting"
     const val COURSE_DETAIL = "course_detail/{courseId}"
-    const val PLAYER = "player/{courseId}"
+    const val PLAYER = "player/{courseId}/{lectureId}"
 
     fun courseDetail(courseId: Int) = "course_detail/$courseId"
-    fun player(courseId: Int) = "player/$courseId"
+    fun player(courseId: Int, lectureId: Int = 0) = "player/$courseId/$lectureId"
 }
 
 @Composable
@@ -262,8 +262,8 @@ fun BitLearningNavGraph(
             CourseDetailScreen(
                 courseId = courseId,
                 onNavigateBack = { navController.popBackStack() },
-                onStartLesson = { lessonCourseId ->
-                    navController.navigate(Routes.player(lessonCourseId))
+                onStartLesson = { lessonCourseId, lectureId ->
+                    navController.navigate(Routes.player(lessonCourseId, lectureId))
                 },
             )
         }
