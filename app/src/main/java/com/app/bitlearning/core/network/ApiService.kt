@@ -28,6 +28,10 @@ interface BitLearningApiService {
     @POST("auth/login")
     suspend fun login(@Body body: LoginBody): ApiWrapper<LoginApiResponse>
 
+    /** POST /auth/refresh-token → { status, message, data: { accessToken, user } } */
+    @POST("auth/refresh-token")
+    suspend fun refreshToken(): ApiWrapper<LoginApiResponse>
+
     /** POST /auth/register → { status, message } — no token; user must activate via email */
     @POST("auth/register")
     suspend fun register(@Body body: RegisterBody): ApiWrapper<Unit>
@@ -145,6 +149,12 @@ interface BitLearningApiService {
 
     @PUT("users/me")
     suspend fun updateProfile(@Body body: UpdateProfileBody): ApiWrapper<UserApiDto>
+}
+
+interface BitLearningRefreshApiService {
+
+    @POST("auth/refresh-token")
+    fun refreshToken(): retrofit2.Call<ApiWrapper<LoginApiResponse>>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -22,6 +22,7 @@ import com.app.bitlearning.domain.repository.LessonRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.async
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -65,6 +66,7 @@ class PlayerViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState
+    private var lessonContentJob: Job? = null
 
     init {
         loadData()
@@ -86,35 +88,15 @@ class PlayerViewModel @Inject constructor(
                 val lessons = sections.flatMap { section -> section.lectures.filterNot { it.isDeleted } }
                     .sortedBy { it.orderIndex }
                 val hasAccess = accessDeferred.await()
-                val accessibleLessons = lessons.filter { hasAccess || it.isPreviewable }
-                val lessonProgress = accessibleLessons.associate { lesson ->
-                    lesson.id to async { lessonRepository.getLectureProgress(lesson.id).getOrElse { 0 } }
-                }.mapValues { it.value.await() }
-                val lessonCompletion = accessibleLessons.associate { lesson ->
-                    lesson.id to async { lessonRepository.isLectureCompleted(lesson.id).getOrElse { lesson.isCompleted } }
-                }.mapValues { it.value.await() }
-                val hydratedLessons = lessons.map { lesson ->
-                    val completed = lessonCompletion[lesson.id] ?: lesson.isCompleted
-                    lesson.copy(
-                        isCompleted = completed,
-                        progress = when {
-                            completed -> 1f
-                            (lessonProgress[lesson.id] ?: 0) > 0 -> maxOf(lesson.progress, 0.01f)
-                            else -> lesson.progress
-                        },
-                    )
-                }
                 val course = courseDeferred.await().copy(
                     sections = sections,
                     hasAccess = hasAccess,
                     progress = progressDeferred.await(),
                 )
                 val initialLesson = resolveInitialLesson(
-                    lessons = hydratedLessons,
+                    lessons = lessons,
                     hasAccess = hasAccess,
                     lastOpenedLectureId = lastOpenedDeferred.await(),
-                    lectureProgress = lessonProgress,
-                    lectureCompletion = lessonCompletion,
                 )
                     ?: error("Không tìm thấy bài học hợp lệ")
 
@@ -122,7 +104,7 @@ class PlayerViewModel @Inject constructor(
                     it.copy(
                         course = course,
                         sections = sections,
-                        lessons = hydratedLessons.map { lesson -> lesson.copy(isLocked = !hasAccess && !lesson.isPreviewable) },
+                        lessons = lessons.map { lesson -> lesson.copy(isLocked = !hasAccess && !lesson.isPreviewable) },
                         currentLesson = initialLesson.copy(isLocked = !hasAccess && !initialLesson.isPreviewable),
                         hasAccess = hasAccess,
                         authToken = tokenDeferred.await(),
@@ -147,8 +129,6 @@ class PlayerViewModel @Inject constructor(
         lessons: List<Lecture>,
         hasAccess: Boolean,
         lastOpenedLectureId: Int?,
-        lectureProgress: Map<Int, Int>,
-        lectureCompletion: Map<Int, Boolean>,
     ): Lecture? {
         val requested = lessons.firstOrNull { it.id == selectedLectureIdArg && (hasAccess || it.isPreviewable) }
         if (requested != null) return requested
@@ -158,16 +138,8 @@ class PlayerViewModel @Inject constructor(
         }
         if (lastOpened != null) return lastOpened
 
-        val inProgress = lessons
-            .asSequence()
-            .filter { hasAccess || it.isPreviewable }
-            .filterNot { lectureCompletion[it.id] == true }
-            .maxByOrNull { lectureProgress[it.id] ?: 0 }
-            ?.takeIf { (lectureProgress[it.id] ?: 0) > 0 }
-        if (inProgress != null) return inProgress
-
         val firstIncomplete = lessons.firstOrNull {
-            (hasAccess || it.isPreviewable) && lectureCompletion[it.id] != true
+            (hasAccess || it.isPreviewable) && !it.isCompleted
         }
         if (firstIncomplete != null) return firstIncomplete
 
@@ -178,7 +150,8 @@ class PlayerViewModel @Inject constructor(
         val lecture = _uiState.value.lessons.firstOrNull { it.id == lectureId } ?: return
         if (lecture.isLocked) return
 
-        viewModelScope.launch {
+        lessonContentJob?.cancel()
+        lessonContentJob = viewModelScope.launch {
             appPreferences.saveLastOpenedLectureId(courseId, lectureId)
             _uiState.update {
                 it.copy(
@@ -224,36 +197,50 @@ class PlayerViewModel @Inject constructor(
                 }
 
                 LectureType.TEXT -> {
-                    val text = lessonRepository.getLectureText(lectureId).getOrThrow()
-                    val isCompleted = lessonRepository.isLectureCompleted(lectureId).getOrElse { lecture.isCompleted }
-                    _uiState.update {
-                        it.copy(
-                            currentTextContent = text,
-                            lessons = updateLecture(it.lessons, lectureId) { item ->
-                                item.copy(isCompleted = isCompleted, progress = if (isCompleted) 1f else item.progress)
-                            },
-                            currentLesson = it.currentLesson?.copy(
-                                isCompleted = isCompleted,
-                                progress = if (isCompleted) 1f else it.currentLesson.progress,
-                            ),
-                        )
+                    val textResult = lessonRepository.getLectureText(lectureId)
+                    if (textResult.isSuccess) {
+                        val text = textResult.getOrNull()
+                        val isCompleted = lessonRepository.isLectureCompleted(lectureId).getOrElse { lecture.isCompleted }
+                        _uiState.update {
+                            it.copy(
+                                currentTextContent = text,
+                                lessons = updateLecture(it.lessons, lectureId) { item ->
+                                    item.copy(isCompleted = isCompleted, progress = if (isCompleted) 1f else item.progress)
+                                },
+                                currentLesson = it.currentLesson?.copy(
+                                    isCompleted = isCompleted,
+                                    progress = if (isCompleted) 1f else it.currentLesson.progress,
+                                ),
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(error = textResult.exceptionOrNull()?.message ?: "Không tải được nội dung bài học")
+                        }
                     }
                 }
 
                 LectureType.QUIZ -> {
-                    val quiz = lessonRepository.getLectureQuiz(lectureId).getOrThrow()
-                    val isCompleted = lessonRepository.isLectureCompleted(lectureId).getOrElse { lecture.isCompleted }
-                    _uiState.update {
-                        it.copy(
-                            currentQuizContent = quiz,
-                            lessons = updateLecture(it.lessons, lectureId) { item ->
-                                item.copy(isCompleted = isCompleted, progress = if (isCompleted) 1f else item.progress)
-                            },
-                            currentLesson = it.currentLesson?.copy(
-                                isCompleted = isCompleted,
-                                progress = if (isCompleted) 1f else it.currentLesson.progress,
-                            ),
-                        )
+                    val quizResult = lessonRepository.getLectureQuiz(lectureId)
+                    if (quizResult.isSuccess) {
+                        val quiz = quizResult.getOrNull()
+                        val isCompleted = lessonRepository.isLectureCompleted(lectureId).getOrElse { lecture.isCompleted }
+                        _uiState.update {
+                            it.copy(
+                                currentQuizContent = quiz,
+                                lessons = updateLecture(it.lessons, lectureId) { item ->
+                                    item.copy(isCompleted = isCompleted, progress = if (isCompleted) 1f else item.progress)
+                                },
+                                currentLesson = it.currentLesson?.copy(
+                                    isCompleted = isCompleted,
+                                    progress = if (isCompleted) 1f else it.currentLesson.progress,
+                                ),
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(error = quizResult.exceptionOrNull()?.message ?: "Không tải được bài tập")
+                        }
                     }
                 }
             }

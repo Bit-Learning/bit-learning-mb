@@ -69,7 +69,7 @@ constructor(
         prefs.saveAccessToken(accessToken)
         isLoggedIn.value = true
 
-        // Refresh token is managed via HttpOnly cookie by OkHttp's CookieJar.
+        // Refresh token is managed via the app's persistent HttpOnly cookie jar.
         AuthToken(
             accessToken = accessToken,
             refreshToken = "",

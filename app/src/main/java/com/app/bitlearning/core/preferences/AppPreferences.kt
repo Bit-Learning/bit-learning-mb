@@ -68,10 +68,18 @@ constructor(
         dataStore.edit { it[ACCESS_TOKEN_KEY] = token }
     }
 
+    fun saveAccessTokenBlocking(token: String) {
+        runBlocking { saveAccessToken(token) }
+    }
+
     suspend fun clearTokens() {
         dataStore.edit {
             it.remove(ACCESS_TOKEN_KEY)
         }
+    }
+
+    fun clearTokensBlocking() {
+        runBlocking { clearTokens() }
     }
 
     suspend fun saveLastOpenedLectureId(courseId: Int, lectureId: Int) {

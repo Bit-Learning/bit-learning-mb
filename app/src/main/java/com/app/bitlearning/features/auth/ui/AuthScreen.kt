@@ -300,12 +300,6 @@ private fun AuthDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        // ── Mock / API toggle chip ────────────────────────────
-                        MockToggleChip(
-                            useMock = uiState.useMock,
-                            onToggle = { viewModel.toggleMock() },
-                        )
-
                         IconButton(onClick = onDismiss) {
                             Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant)
                         }

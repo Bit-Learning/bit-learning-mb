@@ -6,6 +6,7 @@
  */
 package com.app.bitlearning.core.network
 
+import com.app.bitlearning.BuildConfig
 import com.app.bitlearning.core.preferences.AppPreferences
 import com.app.bitlearning.data.repository.*
 import com.app.bitlearning.domain.repository.*
@@ -14,11 +15,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import java.net.CookieManager
-import java.net.CookiePolicy
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
-import okhttp3.JavaNetCookieJar
+import okhttp3.CookieJar
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -42,16 +42,61 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
-        // JavaNetCookieJar stores the HttpOnly refresh-token cookie that the backend
-        // sets on /auth/login so it is automatically replayed on /auth/refresh-token.
-        val cookieManager = CookieManager().apply { setCookiePolicy(CookiePolicy.ACCEPT_ALL) }
+    fun provideCookieJar(cookieJar: PersistentCookieJar): CookieJar = cookieJar
 
-        val loggingInterceptor =
-            HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+    @Provides
+    @Singleton
+    fun provideLoggingInterceptor(): HttpLoggingInterceptor =
+        HttpLoggingInterceptor().apply {
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BASIC
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
+        }
 
+    @Provides
+    @Singleton
+    @Named("refresh")
+    fun provideRefreshOkHttpClient(
+        cookieJar: CookieJar,
+        loggingInterceptor: HttpLoggingInterceptor,
+    ): OkHttpClient {
+        // This client relies only on the refresh_token cookie and must not send stale bearer tokens.
         return OkHttpClient.Builder()
-            .cookieJar(JavaNetCookieJar(cookieManager))
+            .cookieJar(cookieJar)
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    @Named("refresh")
+    fun provideRefreshRetrofit(@Named("refresh") client: OkHttpClient): Retrofit = Retrofit.Builder()
+        .baseUrl(BASE_URL)
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    @Provides
+    @Singleton
+    fun provideRefreshApiService(@Named("refresh") retrofit: Retrofit): BitLearningRefreshApiService =
+        retrofit.create(BitLearningRefreshApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator,
+        cookieJar: CookieJar,
+        loggingInterceptor: HttpLoggingInterceptor,
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .cookieJar(cookieJar)
+            .authenticator(tokenAuthenticator)
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
