@@ -408,7 +408,7 @@ private fun CertificateCard(
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = "Xem chi tiết",
+                            text = "Xem",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontWeight = FontWeight.SemiBold,
                                 color = OnSurface,
