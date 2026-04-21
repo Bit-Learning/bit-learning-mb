@@ -41,6 +41,7 @@ import androidx.core.graphics.toColorInt
 @Composable
 fun CoursesScreen(
     onNavigateToCourse: (Int) -> Unit,
+    onNavigateToPlayer: (Int) -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToSearch: () -> Unit,
@@ -190,6 +191,7 @@ fun CoursesScreen(
                             CourseListCard(
                                 course = course,
                                 onClick = { onNavigateToCourse(course.id) },
+                                onStartLearning = { onNavigateToPlayer(course.id) },
                             )
                         }
                         item { Spacer(Modifier.height(8.dp)) }
@@ -242,6 +244,7 @@ private fun FilterChip(
 private fun CourseListCard(
     course: Course,
     onClick: () -> Unit,
+    onStartLearning: () -> Unit,
 ) {
     val categoryColor = Color(course.category.colorHex.toColorInt())
 
@@ -313,6 +316,22 @@ private fun CourseListCard(
                             ),
                         )
                     }
+                    if (course.hasAccess) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Success.copy(alpha = 0.12f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                        ) {
+                            Text(
+                                text = "Đã sở hữu",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = Success,
+                                    fontWeight = FontWeight.SemiBold,
+                                ),
+                            )
+                        }
+                    }
                 }
 
                 // Title
@@ -344,19 +363,45 @@ private fun CourseListCard(
                             fontWeight = FontWeight.SemiBold,
                         ),
                     )
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(PrimaryContainer),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.BookmarkBorder,
-                            contentDescription = "Lưu",
-                            tint = Primary,
-                            modifier = Modifier.size(16.dp),
-                        )
+                    if (course.hasAccess) {
+                        Button(
+                            onClick = onStartLearning,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer),
+                            elevation = ButtonDefaults.buttonElevation(0.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                            modifier = Modifier.height(32.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.PlayArrow,
+                                contentDescription = null,
+                                tint = Primary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "Học ngay",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Primary,
+                                ),
+                            )
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(PrimaryContainer),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.BookmarkBorder,
+                                contentDescription = "Lưu",
+                                tint = Primary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
                     }
                 }
             }

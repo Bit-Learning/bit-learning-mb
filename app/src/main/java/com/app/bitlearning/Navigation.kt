@@ -129,6 +129,9 @@ fun BitLearningNavGraph(
                 onNavigateToCourse = { courseId ->
                     navController.navigate(Routes.courseDetail(courseId))
                 },
+                onNavigateToPlayer = { courseId ->
+                    navController.navigate(Routes.player(courseId))
+                },
                 onNavigateToHome = {
                     navController.navigate(Routes.HOME)
                 },

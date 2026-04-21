@@ -51,11 +51,18 @@ class CoursesViewModel @Inject constructor(
     private fun loadCourses() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
+            val ownedIds = courseRepository.getMyCourses(page = 0, size = 100)
+                .getOrDefault(emptyList())
+                .map { it.id }
+                .toSet()
             courseRepository.getCourses()
                 .onSuccess { data ->
+                    val updated = data.map { course ->
+                        course.copy(hasAccess = ownedIds.contains(course.id))
+                    }
                     _uiState.update {
                         it.copy(
-                            courses = data,
+                            courses = updated,
                             isLoading = false,
                             error = null,
                         )
