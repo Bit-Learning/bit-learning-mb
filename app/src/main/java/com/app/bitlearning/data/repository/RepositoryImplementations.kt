@@ -255,6 +255,7 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun getUserProfile(): Result<User> = runCatching {
         val wrapper = api.getProfile()
+        Timber.d("Fetched user profile: ${wrapper.data ?: "null"}")
         val dto = wrapper.data ?: error(wrapper.message ?: "Không thể tải hồ sơ")
         dto.toDomain()
     }

@@ -32,6 +32,7 @@ import com.app.bitlearning.core.common.theme.*
 import com.app.bitlearning.core.log.MainLog
 import com.app.bitlearning.domain.model.Course
 import com.app.bitlearning.features.profile.ui.ProfileViewModel
+import timber.log.Timber
 
 @Composable
 fun HomeScreen(
@@ -77,9 +78,11 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(0.dp),
             ) {
                 // Top Bar
+                Timber.d("HomeScreen: user=${profileUiState.user}")
+
                 item {
                     HomeTopBar(
-                        userName = profileUiState.user?.name?.split(" ")?.first() ?: "Bạn",
+                        userName = profileUiState.user?.name ?: "Bạn",
                         avatarUrl = profileUiState.user?.avatar,
                         onAvatarClick = onNavigateToProfile,
                         onNotificationClick = onNavigateToNotification,

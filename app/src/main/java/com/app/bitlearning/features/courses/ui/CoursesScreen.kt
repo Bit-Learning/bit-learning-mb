@@ -100,7 +100,7 @@ fun CoursesScreen(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "Tất cả khóa học trên hệ thống",
+                            text = "Tất cả khóa học trên hệ thống, hiện có ${uiState.courses.size} khóa học",
                             style = MaterialTheme.typography.bodySmall,
                             color = OnSurfaceMuted // hoặc Color.Gray / MaterialTheme.colorScheme.onSurfaceVariant
                         )
