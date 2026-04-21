@@ -16,7 +16,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import java.util.concurrent.TimeUnit
-import javax.inject.Named
 import javax.inject.Singleton
 import okhttp3.CookieJar
 import okhttp3.OkHttpClient
@@ -57,46 +56,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    @Named("refresh")
-    fun provideRefreshOkHttpClient(
-        cookieJar: CookieJar,
-        loggingInterceptor: HttpLoggingInterceptor,
-    ): OkHttpClient {
-        // This client relies only on the refresh_token cookie and must not send stale bearer tokens.
-        return OkHttpClient.Builder()
-            .cookieJar(cookieJar)
-            .addInterceptor(loggingInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    @Named("refresh")
-    fun provideRefreshRetrofit(@Named("refresh") client: OkHttpClient): Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
-        .client(client)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
-    @Provides
-    @Singleton
-    fun provideRefreshApiService(@Named("refresh") retrofit: Retrofit): BitLearningRefreshApiService =
-        retrofit.create(BitLearningRefreshApiService::class.java)
-
-    @Provides
-    @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
         cookieJar: CookieJar,
         loggingInterceptor: HttpLoggingInterceptor,
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .cookieJar(cookieJar)
-            .authenticator(tokenAuthenticator)
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)

@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 // ─────────────────────────────────────────────
 //  State
@@ -117,7 +118,7 @@ constructor(
                 .login(LoginRequest(state.email, state.password))
                 .onSuccess { _uiState.update { it.copy(isLoading = false, authSuccess = true) } }
                 .onFailure { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                    _uiState.update { it.copy(isLoading = false, error = toAuthErrorMessage(e)) }
                 }
         }
     }
@@ -149,7 +150,7 @@ constructor(
                     }
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                    _uiState.update { it.copy(isLoading = false, error = toAuthErrorMessage(e)) }
                 }
         }
     }
@@ -176,7 +177,7 @@ constructor(
                     }
                     .onFailure { e ->
                         log.e(TAG, "getSignInIntent failed: ${e.message}")
-                        _uiState.update { it.copy(isLoading = false, error = e.message) }
+                        _uiState.update { it.copy(isLoading = false, error = toAuthErrorMessage(e)) }
                     }
             }
         }
@@ -195,7 +196,7 @@ constructor(
                 .onSuccess { idToken -> onGoogleIdToken(idToken) }
                 .onFailure { e ->
                     log.e(TAG, "handleGoogleSignInResult failed: ${e.message}")
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                    _uiState.update { it.copy(isLoading = false, error = toAuthErrorMessage(e)) }
                 }
         }
     }
@@ -219,7 +220,7 @@ constructor(
                 }
                 .onFailure { e ->
                     log.e(TAG, "loginWithGoogle FAILED — ${e::class.simpleName}: ${e.message}")
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                    _uiState.update { it.copy(isLoading = false, error = toAuthErrorMessage(e)) }
                 }
         }
     }
@@ -236,7 +237,7 @@ constructor(
                 authRepository.loginWithGitHub("mock_github_code")
                     .onSuccess { _uiState.update { it.copy(isLoading = false, authSuccess = true) } }
                     .onFailure { e ->
-                        _uiState.update { it.copy(isLoading = false, error = e.message) }
+                        _uiState.update { it.copy(isLoading = false, error = toAuthErrorMessage(e)) }
                     }
             }
         } else {
@@ -249,5 +250,13 @@ constructor(
     fun onOAuth2Error(message: String) {
         log.e(TAG, "onOAuth2Error() — $message")
         _uiState.update { it.copy(isLoading = false, error = message) }
+    }
+
+    private fun toAuthErrorMessage(error: Throwable): String {
+        return if (error is HttpException && error.code() == 401) {
+            "Sai tài khoản hoặc mật khẩu"
+        } else {
+            error.message ?: "Đăng nhập thất bại"
+        }
     }
 }
