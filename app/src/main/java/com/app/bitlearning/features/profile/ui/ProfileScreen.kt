@@ -88,15 +88,15 @@ fun ProfileScreen(
                     ) {
                         Column {
                             BLMenuItemRow(
-                                title = "Chứng chỉ của tôi",
-                                icon = Icons.Filled.EmojiEvents,
-                                onClick = onNavigateToCertificates,
+                                title = "Khóa học của tôi",
+                                icon = Icons.Filled.History,
+                                onClick = onNavigateToHistory,
                             )
                             BLDivider(Modifier.padding(horizontal = 16.dp))
                             BLMenuItemRow(
-                                title = "Lịch sử học tập",
-                                icon = Icons.Filled.History,
-                                onClick = onNavigateToHistory,
+                                title = "Chứng chỉ của tôi",
+                                icon = Icons.Filled.EmojiEvents,
+                                onClick = onNavigateToCertificates,
                             )
                         }
                     }

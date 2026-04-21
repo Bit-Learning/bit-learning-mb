@@ -77,7 +77,7 @@ class MyCertificatesViewModel @Inject constructor(
     fun loadCertificates() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            courseRepository.getEnrolledCourses(page = 0, size = 100)
+            courseRepository.getMyCourses(page = 0, size = 100)
                 .onSuccess { courses ->
                     val completed = courses.filter { it.isCompleted || it.progress >= 1f }
                     val pending = courses

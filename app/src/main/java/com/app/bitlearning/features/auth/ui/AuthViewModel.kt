@@ -38,8 +38,6 @@ data class AuthUiState(
     val error: String? = null,
     val isLoginMode: Boolean = true,
     val authSuccess: Boolean = false,
-    /** true → local mock data; false → real API at [NetworkModule.BASE_URL] */
-    val useMock: Boolean = true,
     /**
      * Set after a successful *real* registration to prompt the user to check
      * their email (backend sends an activation email before login is allowed).
@@ -56,7 +54,6 @@ class AuthViewModel
 @Inject
 constructor(
     private val authRepository: AuthRepository,
-    private val prefs: AppPreferences,
     private val log: MainLog,
     private val googleAuthManager: GoogleAuthManager,
 ) : ViewModel() {
@@ -76,15 +73,6 @@ constructor(
     private val _googleSignInEvent = MutableSharedFlow<Intent>(extraBufferCapacity = 1)
     val googleSignInEvent: SharedFlow<Intent> = _googleSignInEvent.asSharedFlow()
 
-    init {
-        // Keep [AuthUiState.useMock] in sync with persisted preference.
-        viewModelScope.launch {
-            prefs.useMock.collect { mock ->
-                _uiState.update { it.copy(useMock = mock) }
-            }
-        }
-    }
-
     // ── Field updates ────────────────────────────────────────────────────
 
     fun onEmailChange(value: String) = _uiState.update { it.copy(email = value, error = null) }
@@ -95,13 +83,6 @@ constructor(
 
     fun switchMode() = _uiState.update {
         it.copy(isLoginMode = !it.isLoginMode, error = null, registerMessage = null)
-    }
-
-    // ── Mock / API toggle ─────────────────────────────────────────────────
-
-    /** Persist the toggle and immediately reflect it in the UI state. */
-    fun toggleMock() {
-        viewModelScope.launch { prefs.setUseMock(!_uiState.value.useMock) }
     }
 
     // ── Email / Password auth ─────────────────────────────────────────────
@@ -134,19 +115,14 @@ constructor(
             authRepository
                 .register(RegisterRequest(state.name, state.email, state.password))
                 .onSuccess {
-                    if (state.useMock) {
-                        // Mock auto-logs in after registration.
-                        _uiState.update { it.copy(isLoading = false, authSuccess = true) }
-                    } else {
-                        // Real API: user must activate email before logging in.
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                registerMessage =
-                                "Đăng ký thành công!\n" +
-                                    "Hãy kiểm tra email để kích hoạt tài khoản trước khi đăng nhập.",
-                            )
-                        }
+                    // Real API: user must activate email before logging in.
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            registerMessage =
+                            "Đăng ký thành công!\n" +
+                                "Hãy kiểm tra email để kích hoạt tài khoản trước khi đăng nhập.",
+                        )
                     }
                 }
                 .onFailure { e ->
@@ -159,27 +135,20 @@ constructor(
 
     /**
      * Start Google Sign-In.
-     * - **Mock**: directly resolves with a fake ID token.
-     * - **Real**: obtains the sign-in [Intent] via [GoogleAuthManager] and
-     *   emits it on [googleSignInEvent] so the UI can launch it.
+     * Starts Google Sign-In by obtaining the sign-in [Intent] via [GoogleAuthManager].
      */
     fun initiateGoogleLogin() {
-        log.d(TAG, "initiateGoogleLogin() — useMock=${_uiState.value.useMock}")
-        if (_uiState.value.useMock) {
-            onGoogleIdToken("mock_google_id_token_${System.currentTimeMillis()}")
-        } else {
-            viewModelScope.launch {
-                _uiState.update { it.copy(isLoading = true, error = null) }
-                googleAuthManager.getSignInIntent()
-                    .onSuccess { intent ->
-                        _uiState.update { it.copy(isLoading = false) }
-                        _googleSignInEvent.emit(intent)
-                    }
-                    .onFailure { e ->
-                        log.e(TAG, "getSignInIntent failed: ${e.message}")
-                        _uiState.update { it.copy(isLoading = false, error = toAuthErrorMessage(e)) }
-                    }
-            }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            googleAuthManager.getSignInIntent()
+                .onSuccess { intent ->
+                    _uiState.update { it.copy(isLoading = false) }
+                    _googleSignInEvent.emit(intent)
+                }
+                .onFailure { e ->
+                    log.e(TAG, "getSignInIntent failed: ${e.message}")
+                    _uiState.update { it.copy(isLoading = false, error = toAuthErrorMessage(e)) }
+                }
         }
     }
 
@@ -227,23 +196,11 @@ constructor(
 
     /**
      * GitHub login.
-     * - **Mock**: resolves with a fake token.
-     * - **Real**: shows an error (SDK-based GitHub Sign-In is not yet supported).
+     * GitHub login is not yet supported on mobile.
      */
     fun initiateGitHubLogin() {
-        if (_uiState.value.useMock) {
-            viewModelScope.launch {
-                _uiState.update { it.copy(isLoading = true, error = null) }
-                authRepository.loginWithGitHub("mock_github_code")
-                    .onSuccess { _uiState.update { it.copy(isLoading = false, authSuccess = true) } }
-                    .onFailure { e ->
-                        _uiState.update { it.copy(isLoading = false, error = toAuthErrorMessage(e)) }
-                    }
-            }
-        } else {
-            _uiState.update {
-                it.copy(error = "GitHub login chưa khả dụng trên mobile. Vui lòng dùng email/mật khẩu.")
-            }
+        _uiState.update {
+            it.copy(error = "GitHub login chưa khả dụng trên mobile. Vui lòng dùng email/mật khẩu.")
         }
     }
 

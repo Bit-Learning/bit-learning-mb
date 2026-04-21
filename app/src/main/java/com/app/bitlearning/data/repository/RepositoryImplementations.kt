@@ -128,7 +128,10 @@ class CourseRepositoryImpl @Inject constructor(
 
     override suspend fun getMyCourses(page: Int, size: Int): Result<List<Course>> = runCatching {
         val wrapper = api.getMyCourses(page = page, size = size)
-        wrapper.data?.map { it.toDomain() } ?: emptyList()
+        wrapper.data
+            ?.filterNot { it.isDeleted == true }
+            ?.map { it.toDomain() }
+            ?: emptyList()
     }
 
     override suspend fun checkCourseAccess(courseId: Int): Result<Boolean> = runCatching {

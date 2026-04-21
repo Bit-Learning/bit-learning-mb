@@ -45,7 +45,7 @@ class ProfileViewModel @Inject constructor(
     private fun loadProfile() {
         viewModelScope.launch {
             val user = userRepository.getUserProfile().getOrNull()
-            val completedCountResult = courseRepository.getEnrolledCourses(page = 0, size = 100)
+            val completedCountResult = courseRepository.getMyCourses(page = 0, size = 100)
             _uiState.update {
                 it.copy(
                     user = user,

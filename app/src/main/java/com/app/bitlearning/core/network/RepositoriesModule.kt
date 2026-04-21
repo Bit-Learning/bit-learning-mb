@@ -24,7 +24,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
 
-    /** Routes auth calls to the mock or real backend depending on [AppPreferences.useMock]. */
+    /** Routes auth calls to the real backend. */
     @Binds
     @Singleton
     abstract fun bindAuthRepository(impl: AuthRepositoryDelegator): AuthRepository

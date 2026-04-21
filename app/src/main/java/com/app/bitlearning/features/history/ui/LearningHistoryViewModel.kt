@@ -70,7 +70,7 @@ class LearningHistoryViewModel @Inject constructor(
 
     private fun loadHistory() {
         viewModelScope.launch {
-            courseRepository.getEnrolledCourses()
+            courseRepository.getMyCourses()
                 .onSuccess { data -> _uiState.update { it.copy(courses = data, isLoading = false) } }
                 .onFailure { _uiState.update { it.copy(isLoading = false) } }
         }

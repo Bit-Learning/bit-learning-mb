@@ -72,7 +72,7 @@ fun LearningHistoryScreen(
                         )
                     } else {
                         Text(
-                            text = "Lịch sử học tập",
+                            text = "Khóa học của tôi",
                             style = MaterialTheme.typography.headlineMedium,
                         )
                     }
@@ -174,7 +174,7 @@ fun LearningHistoryScreen(
                                     modifier = Modifier.size(56.dp),
                                 )
                                 Text(
-                                    text = "Chưa có lịch sử học tập",
+                                    text = "Chưa có khóa học nào",
                                     style = MaterialTheme.typography.bodyMedium.copy(color = OnSurfaceMuted),
                                 )
                             }
@@ -249,7 +249,6 @@ private fun HistoryCourseCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {

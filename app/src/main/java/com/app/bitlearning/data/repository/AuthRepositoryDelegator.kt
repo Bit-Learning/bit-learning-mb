@@ -6,7 +6,6 @@
  */
 package com.app.bitlearning.data.repository
 
-import com.app.bitlearning.core.preferences.AppPreferences
 import com.app.bitlearning.domain.model.AuthToken
 import com.app.bitlearning.domain.model.LoginRequest
 import com.app.bitlearning.domain.model.RegisterRequest
@@ -16,27 +15,20 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 
 /**
- * Delegates all [AuthRepository] calls to either [MockAuthRepositoryImpl] or
- * [RealAuthRepositoryImpl] depending on [AppPreferences.useMock].
- *
- * Switch between local mock data and the real backend at runtime via the
- * "Mock / API" chip in the auth dialog.
+ * Delegates all [AuthRepository] calls to the real backend.
  */
 @Singleton
 class AuthRepositoryDelegator
 @Inject
 constructor(
-    private val mock: MockAuthRepositoryImpl,
     private val real: RealAuthRepositoryImpl,
-    private val prefs: AppPreferences,
 ) : AuthRepository {
 
     private val isLoggedIn = MutableStateFlow(false)
 
-    private suspend fun delegate(): AuthRepository = if (prefs.useMock.first()) mock else real
+    private suspend fun delegate(): AuthRepository = real
 
     override fun isLoggedIn(): Flow<Boolean> = isLoggedIn
 
