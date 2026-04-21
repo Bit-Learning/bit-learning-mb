@@ -41,6 +41,7 @@ fun HomeScreen(
     onNavigateToSearch: () -> Unit,
     onNavigateToNotification: () -> Unit = {},
     onLaunchPythonCompiler: () -> Unit = {},
+    onNavigateToMyCourse: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
     profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -100,7 +101,7 @@ fun HomeScreen(
                         BLSectionHeader(
                             title = "Tiếp tục học",
                             actionLabel = "Xem tất cả",
-                            onAction = { /* TODO */ },
+                            onAction = onNavigateToMyCourse,
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
                         Spacer(Modifier.height(12.dp))

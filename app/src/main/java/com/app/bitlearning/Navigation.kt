@@ -118,6 +118,9 @@ fun BitLearningNavGraph(
                     navController.navigate(Routes.NOTIFICATION)
                 },
                 onLaunchPythonCompiler = onLaunchPythonCompiler,
+                onNavigateToMyCourse = {
+                    navController.navigate(Routes.LEARNING_HISTORY)
+                }
             )
         }
 
