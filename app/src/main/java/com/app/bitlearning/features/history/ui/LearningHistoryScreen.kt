@@ -55,6 +55,9 @@ fun LearningHistoryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showSearch by remember { mutableStateOf(false) }
+    val totalCount = uiState.courses.size
+    val inProgressCount = uiState.courses.count { it.progress in 0.01f..0.99f }
+    val completedCount = uiState.courses.count { it.progress >= 1f }
 
     Scaffold(
         containerColor = Background,
@@ -129,8 +132,14 @@ fun LearningHistoryScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     HistoryFilter.entries.forEach { filter ->
+                        val count = when (filter) {
+                            HistoryFilter.ALL -> totalCount
+                            HistoryFilter.IN_PROGRESS -> inProgressCount
+                            HistoryFilter.COMPLETED -> completedCount
+                        }
                         HistoryFilterChip(
                             filter = filter,
+                            count = count,
                             selected = uiState.selectedFilter == filter,
                             onClick = { viewModel.setFilter(filter) },
                         )
@@ -204,6 +213,7 @@ fun LearningHistoryScreen(
 @Composable
 private fun HistoryFilterChip(
     filter: HistoryFilter,
+    count: Int,
     selected: Boolean,
     onClick: () -> Unit,
 ) {
@@ -217,7 +227,7 @@ private fun HistoryFilterChip(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = filter.label,
+            text = "${filter.label} ($count)",
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Medium,
                 color = if (selected) Color.White else OnSurfaceVariant,
