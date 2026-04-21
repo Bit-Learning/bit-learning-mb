@@ -101,12 +101,6 @@ fun SearchScreen(
                                 style = MaterialTheme.typography.displayMedium,
                             )
                         }
-                        Icon(
-                            imageVector = Icons.Filled.Notifications,
-                            contentDescription = "Thông báo",
-                            tint = OnSurfaceMuted,
-                            modifier = Modifier.size(24.dp),
-                        )
                     }
 
                     Spacer(Modifier.height(16.dp))

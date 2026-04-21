@@ -243,7 +243,6 @@ private fun HistoryCourseCard(
         label = "progress_${course.id}",
     )
     val progressColor = if (isCompleted) Success else Primary
-    val startDate = "15/10/2023" // placeholder — real data would come from API
 
     Card(
         modifier = Modifier
@@ -281,10 +280,6 @@ private fun HistoryCourseCard(
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = "Bắt đầu: $startDate",
-                            style = MaterialTheme.typography.bodySmall.copy(color = OnSurfaceMuted),
                         )
                     }
                     Spacer(Modifier.height(6.dp))

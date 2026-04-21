@@ -357,7 +357,7 @@ private fun CourseListCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "${course.totalLectures} bài học",
+                        text = "",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = Primary,
                             fontWeight = FontWeight.SemiBold,

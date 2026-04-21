@@ -24,7 +24,7 @@ data class SearchUiState(
     val query: String = "",
     val results: List<Course> = emptyList(),
     val trendingCourses: List<Course> = emptyList(),
-    val recentSearches: List<String> = listOf("Lập trình Python", "Lập trình cơ bản"),
+    val recentSearches: List<String> = listOf("trình chiếu", "văn bản"),
     val isLoading: Boolean = false,
     val error: String? = null,
 )
@@ -35,10 +35,10 @@ data class PopularCategory(
 )
 
 val popularCategories = listOf(
-    PopularCategory("Lập trình", "terminal"),
+    PopularCategory("Máy tính", "terminal"),
     PopularCategory("Python", "code"),
-    PopularCategory("Java", "data_object"),
-    PopularCategory("Web", "language"),
+    PopularCategory("Internet", "language"),
+    PopularCategory("Phần mềm", "data_object"),
 )
 
 @OptIn(FlowPreview::class)

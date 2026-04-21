@@ -316,13 +316,16 @@ fun BLCourseCard(
 ) {
     Card(
         modifier = modifier
+            .height(230.dp)
             .clip(RoundedCornerShape(14.dp))
             .clickable { onClick() },
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = CardSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
-        Column {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+        ) {
             AsyncImage(
                 model = imageUrl,
                 contentDescription = title,
@@ -333,7 +336,7 @@ fun BLCourseCard(
                     .background(SurfaceVariant),
             )
             Column(
-                modifier = Modifier.padding(10.dp),
+                modifier = Modifier.padding(10.dp).weight(1f),
                 verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 Text(
@@ -348,6 +351,9 @@ fun BLCourseCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+
+                Spacer(modifier = Modifier.weight(1f))
+
                 BLRatingRow(rating = rating, reviewCount = reviewCount)
             }
         }
