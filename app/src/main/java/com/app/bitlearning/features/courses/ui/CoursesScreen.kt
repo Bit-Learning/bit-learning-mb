@@ -50,6 +50,10 @@ fun CoursesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val availableCategories = CourseCategory.entries
+    val groupedCourses = uiState.filteredCourses
+        .groupBy { it.grade }
+        .toList()
+        .sortedWith(compareBy { it.first ?: Int.MAX_VALUE })
 
     Scaffold(
         containerColor = Background,
@@ -171,14 +175,25 @@ fun CoursesScreen(
                 }
 
                 else -> {
-                    item { Spacer(Modifier.height(16.dp)) }
-                    items(uiState.filteredCourses) { course ->
-                        CourseListCard(
-                            course = course,
-                            onClick = { onNavigateToCourse(course.id) },
-                        )
+                    item { Spacer(Modifier.height(12.dp)) }
+                    groupedCourses.forEach { (grade, courses) ->
+                        item {
+                            Text(
+                                text = if (grade != null) "Lớp $grade" else "Khác",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                modifier = Modifier
+                                    .padding(horizontal = 20.dp)
+                                    .padding(top = 8.dp, bottom = 6.dp),
+                            )
+                        }
+                        items(courses, key = { it.id }) { course ->
+                            CourseListCard(
+                                course = course,
+                                onClick = { onNavigateToCourse(course.id) },
+                            )
+                        }
+                        item { Spacer(Modifier.height(8.dp)) }
                     }
-                    item { Spacer(Modifier.height(8.dp)) }
                 }
             }
         }
