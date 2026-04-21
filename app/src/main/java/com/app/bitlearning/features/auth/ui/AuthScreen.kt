@@ -9,6 +9,7 @@ package com.app.bitlearning.features.auth.ui
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,26 +37,27 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.app.bitlearning.core.common.components.*
 import com.app.bitlearning.core.common.theme.*
+import com.app.bitlearning.R
 
 data class OnboardingPage(
-    val imageUrl: String,
+    val image: Any,
     val title: String,
     val description: String,
 )
 
 private val onboardingPages = listOf(
     OnboardingPage(
-        imageUrl = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600",
+        image = R.drawable.onboarding_2,
         title = "Làm chủ kỹ năng\nmới mọi lúc, mọi nơi",
         description = "Tiếp cận hàng ngàn khóa học từ chuyên gia về công nghệ, thiết kế, kinh doanh và hơn thế nữa. Học theo tốc độ của riêng bạn với những giảng viên hàng đầu thế giới.",
     ),
     OnboardingPage(
-        imageUrl = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600",
+        image = R.drawable.onboarding_1,
         title = "Học từ chuyên gia\nhàng đầu thế giới",
         description = "Các khóa học được thiết kế bởi những chuyên gia thực tế. Nội dung cập nhật liên tục, phù hợp với nhu cầu thực tiễn của thị trường.",
     ),
     OnboardingPage(
-        imageUrl = "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600",
+        image = R.drawable.onboarding_3,
         title = "Nhận chứng chỉ\ncó giá trị thực tế",
         description = "Hoàn thành khóa học và nhận chứng chỉ được công nhận rộng rãi. Nâng cao hồ sơ xin việc và khẳng định năng lực của bạn.",
     ),
@@ -198,7 +201,7 @@ private fun OnboardingPageContent(page: OnboardingPage) {
             colors = CardDefaults.cardColors(containerColor = PrimaryContainer),
         ) {
             AsyncImage(
-                model = page.imageUrl,
+                model = page.image,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
@@ -284,14 +287,17 @@ private fun AuthDialog(
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(PrimaryContainer),
+                                .clip(RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(Icons.Filled.School, null, tint = Primary)
+                            Image(
+                                painter = painterResource(id = R.drawable.app_logo),
+                                contentDescription = "App logo",
+                                modifier = Modifier.size(40.dp),
+                            )
                         }
                         Text(
-                            text = "Xác thực",
+                            text = "Xác thực tài khoản",
                             style = MaterialTheme.typography.headlineMedium,
                         )
                     }
@@ -307,23 +313,23 @@ private fun AuthDialog(
                 }
 
                 // Tabs
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(0.dp),
-                ) {
-                    TabButton(
-                        text = "Đăng nhập",
-                        selected = uiState.isLoginMode,
-                        modifier = Modifier.weight(1f),
-                        onClick = { if (!uiState.isLoginMode) viewModel.switchMode() },
-                    )
-                    TabButton(
-                        text = "Đăng ký",
-                        selected = !uiState.isLoginMode,
-                        modifier = Modifier.weight(1f),
-                        onClick = { if (uiState.isLoginMode) viewModel.switchMode() },
-                    )
-                }
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.spacedBy(0.dp),
+//                ) {
+//                    TabButton(
+//                        text = "Đăng nhập",
+//                        selected = uiState.isLoginMode,
+//                        modifier = Modifier.weight(1f),
+//                        onClick = { if (!uiState.isLoginMode) viewModel.switchMode() },
+//                    )
+//                    TabButton(
+//                        text = "Đăng ký",
+//                        selected = !uiState.isLoginMode,
+//                        modifier = Modifier.weight(1f),
+//                        onClick = { if (uiState.isLoginMode) viewModel.switchMode() },
+//                    )
+//                }
 
                 BLDivider()
 
@@ -370,7 +376,7 @@ private fun AuthDialog(
                     BLTextField(
                         value = uiState.email,
                         onValueChange = viewModel::onEmailChange,
-                        placeholder = "example@course.com",
+                        placeholder = "example@gmail.com",
                         leadingIcon = Icons.Filled.Email,
                     )
                 }
@@ -382,17 +388,17 @@ private fun AuthDialog(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text("Mật khẩu", style = MaterialTheme.typography.titleMedium)
-                        if (uiState.isLoginMode) {
-                            TextButton(
-                                onClick = { /* TODO: Forgot password */ },
-                                contentPadding = PaddingValues(0.dp),
-                            ) {
-                                Text(
-                                    "Quên mật khẩu?",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = Primary),
-                                )
-                            }
-                        }
+//                        if (uiState.isLoginMode) {
+//                            TextButton(
+//                                onClick = { /* TODO: Forgot password */ },
+//                                contentPadding = PaddingValues(0.dp),
+//                            ) {
+//                                Text(
+//                                    "Quên mật khẩu?",
+//                                    style = MaterialTheme.typography.bodySmall.copy(color = Primary),
+//                                )
+//                            }
+//                        }
                     }
                     BLTextField(
                         value = uiState.password,
@@ -468,11 +474,11 @@ private fun AuthDialog(
                         onClick = { viewModel.initiateGoogleLogin() },
                         modifier = Modifier.weight(1f),
                     )
-                    SocialLoginButton(
-                        text = "GitHub",
-                        onClick = { viewModel.initiateGitHubLogin() },
-                        modifier = Modifier.weight(1f),
-                    )
+//                    SocialLoginButton(
+//                        text = "GitHub",
+//                        onClick = { viewModel.initiateGitHubLogin() },
+//                        modifier = Modifier.weight(1f),
+//                    )
                 }
 
                 // Terms
@@ -574,6 +580,17 @@ private fun SocialLoginButton(
         colors = ButtonDefaults.outlinedButtonColors(contentColor = OnSurface),
         border = androidx.compose.foundation.BorderStroke(1.dp, Divider),
     ) {
-        Text(text = text, style = MaterialTheme.typography.titleSmall)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.google),
+                contentDescription = "$text logo",
+                modifier = Modifier.size(30.dp),
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(text = text, style = MaterialTheme.typography.titleSmall)
+        }
     }
 }

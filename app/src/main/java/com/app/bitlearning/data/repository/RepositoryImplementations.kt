@@ -7,6 +7,7 @@
 package com.app.bitlearning.data.repository
 
 import android.content.Context
+import android.util.Log
 import androidx.core.content.FileProvider
 import com.app.bitlearning.core.network.NetworkModule
 import com.app.bitlearning.core.network.BitLearningApiService
@@ -25,6 +26,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import retrofit2.HttpException
+import timber.log.Timber
 
 // ─────────────────────────────────────────────
 //  Auth Repository Implementation (Mock)
@@ -105,6 +107,7 @@ class CourseRepositoryImpl @Inject constructor(
 
     override suspend fun getCourses(page: Int, size: Int): Result<List<Course>> = runCatching {
         val wrapper = api.getCourses(page = page, size = size)
+        Timber.tag("CourseRepositoryImpl").d("Fetched courses: ${wrapper.data?.size ?: 0}")
         wrapper.data?.map { it.toDomain() } ?: emptyList()
     }
 

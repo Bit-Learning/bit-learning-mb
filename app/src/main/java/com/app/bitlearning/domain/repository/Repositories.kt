@@ -20,11 +20,11 @@ interface AuthRepository {
 }
 
 interface CourseRepository {
-    suspend fun getCourses(page: Int = 0, size: Int = 10): Result<List<Course>>
+    suspend fun getCourses(page: Int = 0, size: Int = 100): Result<List<Course>>
     suspend fun getCourseById(id: Int): Result<Course>
-    suspend fun getCoursesByGrade(grade: Int, page: Int = 0, size: Int = 10): Result<List<Course>>
-    suspend fun getEnrolledCourses(page: Int = 0, size: Int = 10): Result<List<Course>>
-    suspend fun getMyCourses(page: Int = 0, size: Int = 10): Result<List<Course>>
+    suspend fun getCoursesByGrade(grade: Int, page: Int = 0, size: Int = 100): Result<List<Course>>
+    suspend fun getEnrolledCourses(page: Int = 0, size: Int = 100): Result<List<Course>>
+    suspend fun getMyCourses(page: Int = 0, size: Int = 100): Result<List<Course>>
     suspend fun checkCourseAccess(courseId: Int): Result<Boolean>
     suspend fun getCourseProgress(courseId: Int): Result<Float>
     suspend fun getCertificate(courseId: Int, courseTitle: String): Result<Certificate>

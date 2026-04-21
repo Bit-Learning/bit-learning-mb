@@ -76,7 +76,7 @@ interface BitLearningApiService {
     @GET("courses")
     suspend fun getCourses(
         @Query("page") page: Int = 0,
-        @Query("size") size: Int = 10,
+        @Query("size") size: Int = 100,
     ): ApiWrapper<List<CoursePreviewDto>>
 
     @GET("courses/{id}")

@@ -467,7 +467,7 @@ fun BLBottomNavBar(
     val items = listOf(
         BottomNavItem("home", "Trang chủ", androidx.compose.material.icons.Icons.Filled.Home),
         BottomNavItem("search", "Tìm kiếm", androidx.compose.material.icons.Icons.Filled.Search),
-        BottomNavItem("python", "Python", androidx.compose.material.icons.Icons.Filled.Computer),
+        BottomNavItem("python", "Luyện Python", androidx.compose.material.icons.Icons.Filled.Computer),
         BottomNavItem("courses", "Khóa học", androidx.compose.material.icons.Icons.Filled.MenuBook),
         BottomNavItem("profile", "Hồ sơ", androidx.compose.material.icons.Icons.Filled.Person),
     )

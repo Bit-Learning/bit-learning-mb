@@ -9,8 +9,8 @@ package com.app.bitlearning.core.common.theme
 import androidx.compose.ui.graphics.Color
 
 // Primary Brand Colors
-val Primary = Color(0xFF1E40AF) // Deep Blue
-val PrimaryLight = Color(0xFF3B82F6) // Bright Blue
+val Primary = Color(0xFF137FEC)
+val PrimaryLight = Color(0xFF60A5FA)
 val PrimaryContainer = Color(0xFFDBEAFE)
 
 // Secondary

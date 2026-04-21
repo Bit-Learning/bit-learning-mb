@@ -192,19 +192,19 @@ private fun HomeTopBar(
                 )
             }
         }
-        IconButton(
-            onClick = onNotificationClick,
-            modifier = Modifier
-                .size(42.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(SurfaceVariant),
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Notifications,
-                contentDescription = "Thông báo",
-                tint = OnSurface,
-            )
-        }
+//        IconButton(
+//            onClick = onNotificationClick,
+//            modifier = Modifier
+//                .size(42.dp)
+//                .clip(RoundedCornerShape(12.dp))
+//                .background(SurfaceVariant),
+//        ) {
+//            Icon(
+//                imageVector = Icons.Filled.Notifications,
+//                contentDescription = "Thông báo",
+//                tint = OnSurface,
+//            )
+//        }
     }
 }
 
@@ -237,7 +237,7 @@ private fun HomeSearchBar(
                 modifier = Modifier.size(20.dp),
             )
             Text(
-                text = "Tìm kiếm khóa học, kỹ năng hoặc người hướng dẫn...",
+                text = "Tìm kiếm khóa học, kỹ năng...",
                 style = MaterialTheme.typography.bodyMedium.copy(color = OnSurfaceMuted),
                 maxLines = 1,
             )
@@ -281,10 +281,10 @@ private fun ContinueLearningCard(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                BLCategoryChip(
-                    label = course.category.displayName,
-                    color = Color(course.category.colorHex.toColorInt()),
-                )
+//                BLCategoryChip(
+//                    label = course.category.displayName,
+//                    color = Color(course.category.colorHex.toColorInt()),
+//                )
 
                 Text(
                     text = course.title,

@@ -21,10 +21,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.app.bitlearning.BuildConfig
 import com.app.bitlearning.core.common.components.*
 import com.app.bitlearning.core.common.theme.*
 
@@ -42,6 +44,9 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showLogoutDialog by remember { mutableStateOf(false) }
+
+    val versionName = BuildConfig.VERSION_NAME
+    val versionCode = BuildConfig.VERSION_CODE
 
     Scaffold(
         containerColor = Background,
@@ -98,39 +103,39 @@ fun ProfileScreen(
                 }
 
                 // Account Section
-                item {
-                    Spacer(Modifier.height(20.dp))
-                    ProfileSectionLabel(label = "TÀI KHOẢN & CÀI ĐẶT")
-                    Spacer(Modifier.height(8.dp))
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = CardSurface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    ) {
-                        Column {
+//                item {
+//                    Spacer(Modifier.height(20.dp))
+//                    ProfileSectionLabel(label = "TÀI KHOẢN & CÀI ĐẶT")
+//                    Spacer(Modifier.height(8.dp))
+//                    Card(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(horizontal = 20.dp),
+//                        shape = RoundedCornerShape(20.dp),
+//                        colors = CardDefaults.cardColors(containerColor = CardSurface),
+//                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+//                    ) {
+//                        Column {
 //                            BLMenuItemRow(
 //                                title = "Phương thức thanh toán",
 //                                icon = Icons.Filled.CreditCard,
 //                                onClick = onNavigateToPaymentSetting,
 //                            )
 //                            BLDivider(Modifier.padding(horizontal = 16.dp))
-                            BLMenuItemRow(
-                                title = "Cài đặt thông báo",
-                                icon = Icons.Filled.Notifications,
-                                onClick = onNavigateToNotificationSetting,
-                            )
-                            BLDivider(Modifier.padding(horizontal = 16.dp))
-                            BLMenuItemRow(
-                                title = "Trợ giúp & Hỗ trợ",
-                                icon = Icons.AutoMirrored.Filled.HelpOutline,
-                                onClick = onNavigateToSupport,
-                            )
-                        }
-                    }
-                }
+//                            BLMenuItemRow(
+//                                title = "Cài đặt thông báo",
+//                                icon = Icons.Filled.Notifications,
+//                                onClick = onNavigateToNotificationSetting,
+//                            )
+//                            BLDivider(Modifier.padding(horizontal = 16.dp))
+//                            BLMenuItemRow(
+//                                title = "Trợ giúp & Hỗ trợ",
+//                                icon = Icons.AutoMirrored.Filled.HelpOutline,
+//                                onClick = onNavigateToSupport,
+//                            )
+//                        }
+//                    }
+//                }
 
                 // Logout Button
                 item {
@@ -171,12 +176,12 @@ fun ProfileScreen(
                 item {
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        text = "Phiên bản 2.4.1 (Build 890)",
+                        text = "Phiên bản $versionName (Build $versionCode)",
                         style = MaterialTheme.typography.bodySmall.copy(color = OnSurfaceMuted),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 20.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -230,11 +235,11 @@ private fun ProfileTopBar(
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Quay lại")
             }
         },
-        actions = {
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Filled.Edit, "Chỉnh sửa", tint = Primary)
-            }
-        },
+//        actions = {
+//            IconButton(onClick = onEdit) {
+//                Icon(Icons.Filled.Edit, "Chỉnh sửa", tint = Primary)
+//            }
+//        },
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Background),
     )
 }

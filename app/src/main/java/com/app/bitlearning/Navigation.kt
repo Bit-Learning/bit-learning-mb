@@ -19,7 +19,6 @@ import com.app.bitlearning.features.history.ui.LearningHistoryScreen
 import com.app.bitlearning.features.home.ui.HomeScreen
 import com.app.bitlearning.features.notification.ui.NotificationScreen
 import com.app.bitlearning.features.notificationsetting.ui.NotificationSettingScreen
-import com.app.bitlearning.features.payment.ui.PaymentSettingScreen
 import com.app.bitlearning.features.player.ui.PlayerScreen
 import com.app.bitlearning.features.profile.ui.EditProfileScreen
 import com.app.bitlearning.features.profile.ui.MyCertificatesScreen
@@ -85,11 +84,6 @@ fun BitLearningNavGraph(
             SplashScreen(
                 onNavigateToAuth = {
                     navController.navigate(Routes.AUTH) {
-                        popUpTo(Routes.SPLASH) { inclusive = true }
-                    }
-                },
-                onNavigateToHome = {
-                    navController.navigate(Routes.HOME) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
                     }
                 },

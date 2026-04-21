@@ -448,10 +448,10 @@ private fun TrendingCourseRow(
                     .fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                BLCategoryChip(
-                    label = course.category.displayName,
-                    color = categoryColor(course.category),
-                )
+//                BLCategoryChip(
+//                    label = course.category.displayName,
+//                    color = categoryColor(course.category),
+//                )
                 Text(
                     text = course.title,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),

@@ -81,33 +81,24 @@ fun CoursesScreen(
                         .background(Background),
                 ) {
                     // Title row
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp)
-                            .padding(top = 20.dp, bottom = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                            .padding(top = 20.dp, bottom = 12.dp)
                     ) {
                         Text(
                             text = "Danh sách khóa học",
                             style = MaterialTheme.typography.headlineMedium,
                         )
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(SurfaceVariant)
-                                .clickable { onNavigateToNotification() },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Notifications,
-                                contentDescription = "Thông báo",
-                                tint = OnSurfaceVariant,
-                                modifier = Modifier.size(22.dp),
-                            )
-                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "Tất cả khóa học trên hệ thống",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = OnSurfaceMuted // hoặc Color.Gray / MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
 
                     if (availableCategories.size > 1) {
@@ -273,22 +264,22 @@ private fun CourseListCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(categoryColor.copy(alpha = 0.12f))
-                            .padding(horizontal = 8.dp, vertical = 3.dp),
-                    ) {
-                        Text(
-                            text = course.category.displayName.uppercase(),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = categoryColor,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 9.sp,
-                                letterSpacing = 0.8.sp,
-                            ),
-                        )
-                    }
+//                    Box(
+//                        modifier = Modifier
+//                            .clip(RoundedCornerShape(4.dp))
+//                            .background(categoryColor.copy(alpha = 0.12f))
+//                            .padding(horizontal = 8.dp, vertical = 3.dp),
+//                    ) {
+//                        Text(
+//                            text = course.category.displayName.uppercase(),
+//                            style = MaterialTheme.typography.labelSmall.copy(
+//                                color = categoryColor,
+//                                fontWeight = FontWeight.Bold,
+//                                fontSize = 9.sp,
+//                                letterSpacing = 0.8.sp,
+//                            ),
+//                        )
+//                    }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
