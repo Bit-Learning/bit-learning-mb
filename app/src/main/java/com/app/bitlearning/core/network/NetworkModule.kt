@@ -63,6 +63,12 @@ object NetworkModule {
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .cookieJar(cookieJar)
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .header("User-Agent", "BitLearning-Android/${BuildConfig.VERSION_NAME} Mobile")
+                    .build()
+                chain.proceed(request)
+            }
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)

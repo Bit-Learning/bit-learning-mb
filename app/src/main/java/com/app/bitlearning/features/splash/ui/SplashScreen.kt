@@ -18,12 +18,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.bitlearning.R
+import com.app.bitlearning.features.splash.ui.SplashViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun SplashScreen(
     onNavigateToAuth: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    viewModel: SplashViewModel = hiltViewModel(),
 ) {
     var visible by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
@@ -38,9 +43,8 @@ fun SplashScreen(
     LaunchedEffect(Unit) {
         visible = true
         delay(2200)
-        // TODO: Check stored auth token to decide route
-        // For now, navigate to auth
-        onNavigateToAuth()
+        val hasToken = viewModel.hasStoredToken()
+        if (hasToken) onNavigateToHome() else onNavigateToAuth()
     }
 
     Box(

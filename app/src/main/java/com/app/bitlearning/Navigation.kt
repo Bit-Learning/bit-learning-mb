@@ -87,6 +87,11 @@ fun BitLearningNavGraph(
                         popUpTo(Routes.SPLASH) { inclusive = true }
                     }
                 },
+                onNavigateToHome = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                },
             )
         }
 

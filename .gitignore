@@ -88,3 +88,4 @@ lint/tmp/
 apikey.properties
 *.keystore
 keystore.properties
+.kiro/
