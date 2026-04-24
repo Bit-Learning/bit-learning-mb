@@ -107,6 +107,7 @@ fun PlayerScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val tabs = listOf("Bài học", "Giới thiệu", "Nội dung")
+    var isFullscreen by remember { mutableStateOf(false) }
     val showBottomCompletionAction =
         uiState.currentLesson != null &&
             uiState.canAccessCurrentLesson &&
@@ -115,13 +116,15 @@ fun PlayerScreen(
     Scaffold(
         containerColor = Background,
         topBar = {
-            PlayerTopBar(
-                title = uiState.course?.title ?: "",
-                onBack = onNavigateBack,
-            )
+            if (!isFullscreen) {
+                PlayerTopBar(
+                    title = uiState.course?.title ?: "",
+                    onBack = onNavigateBack,
+                )
+            }
         },
         bottomBar = {
-            if (showBottomCompletionAction) {
+            if (!isFullscreen && showBottomCompletionAction) {
                 Box(modifier = Modifier.padding(16.dp)) {
                     BLPrimaryButton(
                         text = if (uiState.currentLesson?.isCompleted == true) "Đã hoàn thành" else "Đánh dấu đã hoàn thành",
@@ -138,14 +141,29 @@ fun PlayerScreen(
             return@Scaffold
         }
 
+        if (isFullscreen) {
+            // Fullscreen: video fills entire screen
+            LessonContentHeader(
+                uiState = uiState,
+                onSync = viewModel::syncCurrentProgress,
+                isFullscreen = true,
+                onFullscreenChange = { isFullscreen = it },
+            )
+            return@Scaffold
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .background(Background),
         ) {
-            LessonContentHeader(uiState = uiState, onSync = viewModel::syncCurrentProgress)
-
+            LessonContentHeader(
+                uiState = uiState,
+                onSync = viewModel::syncCurrentProgress,
+                isFullscreen = false,
+                onFullscreenChange = { isFullscreen = it },
+            )
             TabRow(
                 selectedTabIndex = uiState.selectedTab,
                 containerColor = Surface,
@@ -190,6 +208,8 @@ fun PlayerScreen(
 private fun LessonContentHeader(
     uiState: PlayerUiState,
     onSync: (Int, Int) -> Unit,
+    isFullscreen: Boolean = false,
+    onFullscreenChange: ((Boolean) -> Unit)? = null,
 ) {
     when {
         !uiState.canAccessCurrentLesson -> LockedLessonBanner()
@@ -197,12 +217,14 @@ private fun LessonContentHeader(
             BLVideoPlayer(
                 videoUrl = uiState.currentVideoUrl,
                 authToken = uiState.authToken,
-                modifier = Modifier
+                modifier = if (isFullscreen) Modifier.fillMaxSize() else Modifier
                     .fillMaxWidth()
                     .aspectRatio(16f / 9f),
                 autoPlay = uiState.isAutoPlay,
                 startPositionSeconds = uiState.lastWatchedSecond,
                 onProgressSync = onSync,
+                isFullscreen = isFullscreen,
+                onFullscreenChange = onFullscreenChange,
             )
         }
 

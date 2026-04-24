@@ -6,8 +6,11 @@
  */
 package com.app.bitlearning.features.player.components
 
+import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.util.Log
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
@@ -16,7 +19,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -26,7 +32,6 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
-import androidx.media3.datasource.HttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.ui.PlayerView
@@ -44,8 +49,11 @@ fun BLVideoPlayer(
     autoPlay: Boolean = true,
     startPositionSeconds: Int = 0,
     onProgressSync: ((Int, Int) -> Unit)? = null,
+    isFullscreen: Boolean = false,
+    onFullscreenChange: ((Boolean) -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
 
     val httpFactory = remember(authToken) {
         val headers = mutableMapOf<String, String>()
@@ -53,18 +61,38 @@ fun BLVideoPlayer(
             headers["Authorization"] = "Bearer $authToken"
         }
         headers["Accept"] = "application/vnd.apple.mpegurl, application/octet-stream, */*"
-
         DefaultHttpDataSource.Factory()
             .setAllowCrossProtocolRedirects(true)
             .setDefaultRequestProperties(headers)
     }
 
     val exoPlayer = remember(authToken) {
-        ExoPlayer.Builder(
-            context,
-        ).build().apply {
+        ExoPlayer.Builder(context).build().apply {
             playWhenReady = autoPlay
             repeatMode = Player.REPEAT_MODE_OFF
+        }
+    }
+
+    // Sync orientation with fullscreen state
+    LaunchedEffect(isFullscreen) {
+        activity?.requestedOrientation = if (isFullscreen) {
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+        // Immersive mode for fullscreen
+        val window = activity?.window
+        if (isFullscreen) {
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
+    // Restore orientation when leaving the screen
+    DisposableEffect(Unit) {
+        onDispose {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
     }
 
@@ -79,7 +107,6 @@ fun BLVideoPlayer(
                 .setMimeType(MimeTypes.APPLICATION_M3U8)
                 .build()
             val mediaSource = HlsMediaSource.Factory(httpFactory).createMediaSource(mediaItem)
-
             Log.i(TAG, "Preparing HLS source: $videoUrl")
             exoPlayer.stop()
             exoPlayer.clearMediaItems()
@@ -110,12 +137,7 @@ fun BLVideoPlayer(
                     else -> "UNKNOWN($playbackState)"
                 }
                 Log.d(TAG, "Playback state=$state url=$videoUrl")
-
-                if (
-                    playbackState == Player.STATE_READY &&
-                    !hasAppliedInitialSeek &&
-                    startPositionSeconds > 0
-                ) {
+                if (playbackState == Player.STATE_READY && !hasAppliedInitialSeek && startPositionSeconds > 0) {
                     hasAppliedInitialSeek = true
                     exoPlayer.seekTo(startPositionSeconds * 1000L)
                     Log.d(TAG, "Applied initial seek to ${startPositionSeconds}s")
@@ -123,16 +145,11 @@ fun BLVideoPlayer(
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                Log.e(
-                    TAG,
-                    "Playback error url=$videoUrl type=${error.errorCodeName} cause=${error.cause?.javaClass?.simpleName ?: "none"}: ${error.cause?.message ?: error.message}",
-                )
+                Log.e(TAG, "Playback error url=$videoUrl type=${error.errorCodeName} cause=${error.cause?.javaClass?.simpleName ?: "none"}: ${error.cause?.message ?: error.message}")
             }
         }
         exoPlayer.addListener(listener)
-        onDispose {
-            exoPlayer.removeListener(listener)
-        }
+        onDispose { exoPlayer.removeListener(listener) }
     }
 
     DisposableEffect(Unit) {
@@ -157,6 +174,9 @@ fun BLVideoPlayer(
                     useController = true
                     setShowNextButton(false)
                     setShowPreviousButton(false)
+                    setFullscreenButtonClickListener { entering ->
+                        onFullscreenChange?.invoke(entering)
+                    }
                 }
             },
             modifier = Modifier.fillMaxSize(),
