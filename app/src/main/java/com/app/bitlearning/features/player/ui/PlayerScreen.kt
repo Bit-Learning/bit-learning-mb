@@ -111,7 +111,7 @@ fun PlayerScreen(
     val showBottomCompletionAction =
         uiState.currentLesson != null &&
             uiState.canAccessCurrentLesson &&
-            uiState.currentLesson?.type != LectureType.QUIZ
+            uiState.currentLesson?.type == LectureType.TEXT
 
     Scaffold(
         containerColor = Background,

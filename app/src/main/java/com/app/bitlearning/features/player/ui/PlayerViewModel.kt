@@ -259,6 +259,9 @@ class PlayerViewModel @Inject constructor(
         val currentId = _uiState.value.currentLesson?.id ?: return
         if (currentSecond <= 0 || totalDuration <= 0) return
 
+        // Tính % xem để biết có đạt ngưỡng hoàn thành 90% chưa (khớp với backend COMPLETION_THRESHOLD)
+        val isNowCompleted = totalDuration > 0 && (currentSecond.toDouble() / totalDuration) >= 0.9
+
         viewModelScope.launch {
             val result = lessonRepository.syncProgress(
                 SyncProgressRequest(
@@ -268,14 +271,30 @@ class PlayerViewModel @Inject constructor(
                 ),
             )
             if (result.isSuccess) {
+                val wasAlreadyCompleted = _uiState.value.currentLesson?.isCompleted == true
                 _uiState.update { state ->
-                    val syncedProgress =
-                        if (currentSecond > 0) maxOf(state.currentLesson?.progress ?: 0f, 0.01f) else state.currentLesson?.progress ?: 0f
+                    val syncedProgress = when {
+                        isNowCompleted -> 1f
+                        currentSecond > 0 -> maxOf(state.currentLesson?.progress ?: 0f, 0.01f)
+                        else -> state.currentLesson?.progress ?: 0f
+                    }
                     state.copy(
-                        lessons = updateLecture(state.lessons, currentId) { it.copy(progress = syncedProgress) },
-                        currentLesson = state.currentLesson?.copy(progress = syncedProgress),
+                        lessons = updateLecture(state.lessons, currentId) {
+                            it.copy(
+                                progress = syncedProgress,
+                                isCompleted = it.isCompleted || isNowCompleted,
+                            )
+                        },
+                        currentLesson = state.currentLesson?.copy(
+                            progress = syncedProgress,
+                            isCompleted = state.currentLesson.isCompleted || isNowCompleted,
+                        ),
                         lastWatchedSecond = currentSecond,
                     )
+                }
+                // Nếu vừa đạt 90% lần đầu thì refresh tiến độ khóa học
+                if (isNowCompleted && !wasAlreadyCompleted) {
+                    refreshCourseProgress()
                 }
             }
         }
