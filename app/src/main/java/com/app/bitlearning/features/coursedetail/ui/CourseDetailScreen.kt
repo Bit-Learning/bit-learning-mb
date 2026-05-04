@@ -21,11 +21,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.content.Intent
+import android.net.Uri
 import coil3.compose.AsyncImage
 import com.app.bitlearning.core.common.components.*
 import com.app.bitlearning.core.common.theme.*
@@ -39,6 +42,7 @@ fun CourseDetailScreen(
     viewModel: CourseDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Bài học", "Giới thiệu", "Tài liệu")
     val firstAccessibleLecture = remember(uiState.lessons, uiState.hasAccess) {
@@ -56,20 +60,28 @@ fun CourseDetailScreen(
         bottomBar = {
             if (!uiState.isLoading && uiState.course != null) {
                 Box(modifier = Modifier.padding(16.dp)) {
-                    BLPrimaryButton(
-                        text = if ((uiState.progress) > 0f) {
-                            "Tiếp tục học"
-                        } else {
-                            "Bắt đầu học"
-                        },
-                        onClick = {
-                            firstAccessibleLecture?.let { lecture ->
-                                onStartLesson(courseId, lecture.id)
-                            }
-                        },
-                        leadingIcon = Icons.Filled.PlayArrow,
-                        enabled = firstAccessibleLecture != null,
-                    )
+                    if (uiState.hasAccess) {
+                        BLPrimaryButton(
+                            text = if (uiState.progress > 0f) "Tiếp tục học" else "Bắt đầu học",
+                            onClick = {
+                                firstAccessibleLecture?.let { lecture ->
+                                    onStartLesson(courseId, lecture.id)
+                                }
+                            },
+                            leadingIcon = Icons.Filled.PlayArrow,
+                            enabled = firstAccessibleLecture != null,
+                        )
+                    } else {
+                        BLPrimaryButton(
+                            text = "Mua khóa học trên website",
+                            onClick = {
+                                val uri = Uri.parse("https://bit-learning.lch.id.vn/courses/$courseId")
+                                val intent = Intent(Intent.ACTION_VIEW, uri)
+                                context.startActivity(intent)
+                            },
+                            leadingIcon = Icons.Filled.ShoppingCart,
+                        )
+                    }
                 }
             }
         },
