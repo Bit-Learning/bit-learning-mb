@@ -406,14 +406,6 @@ private fun CertificateCard(
                             tint = OnSurface,
                             modifier = Modifier.size(16.dp),
                         )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = "Xem",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = OnSurface,
-                            ),
-                        )
                     }
                 }
             }
