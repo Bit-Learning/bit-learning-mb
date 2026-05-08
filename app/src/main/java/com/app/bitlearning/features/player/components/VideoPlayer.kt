@@ -22,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -125,7 +126,10 @@ fun BLVideoPlayer(
         }
     }
 
-    DisposableEffect(exoPlayer, videoUrl, startPositionSeconds) {
+    // Capture the seek position at the moment the video URL changes — not updated on every sync
+    val initialSeekSeconds = remember(videoUrl) { startPositionSeconds }
+
+    DisposableEffect(exoPlayer, videoUrl) {
         var hasAppliedInitialSeek = false
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -137,10 +141,10 @@ fun BLVideoPlayer(
                     else -> "UNKNOWN($playbackState)"
                 }
                 Log.d(TAG, "Playback state=$state url=$videoUrl")
-                if (playbackState == Player.STATE_READY && !hasAppliedInitialSeek && startPositionSeconds > 0) {
+                if (playbackState == Player.STATE_READY && !hasAppliedInitialSeek && initialSeekSeconds > 0) {
                     hasAppliedInitialSeek = true
-                    exoPlayer.seekTo(startPositionSeconds * 1000L)
-                    Log.d(TAG, "Applied initial seek to ${startPositionSeconds}s")
+                    exoPlayer.seekTo(initialSeekSeconds * 1000L)
+                    Log.d(TAG, "Applied initial seek to ${initialSeekSeconds}s")
                 }
             }
 
