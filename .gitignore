@@ -89,3 +89,5 @@ apikey.properties
 *.keystore
 keystore.properties
 .kiro/
+
+.codebase-memory
